@@ -1,1 +1,8 @@
 *.swp
+
+# Visual studio
+*.sdf
+*.opensdf
+*.suo
+*.vcxproj.user
+*.vcxproj.filters

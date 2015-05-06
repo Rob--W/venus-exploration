@@ -1,1 +1,11 @@
 *.swp
+
+# Visual studio
+*.sdf
+*.opensdf
+*.suo
+*.vcxproj.user
+*.vcxproj.filters
+
+# Auto-generated Visual Micro files
+Source/Visual Micro/

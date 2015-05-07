@@ -2,9 +2,8 @@
 // VARIABLE DECLARATION
 // ----------------------------------------------------------
 
-// Maximum number of allowed paths
-#define PATH_ENTRIES	100
-#define SAMPLES			7
+#define PATH_ENTRIES	100		// Maximum number of allowed paths
+#define SAMPLES			7		// Number of samples to take for the top-US sensor
 
 
 // Path struct holds basic information about driven paths
@@ -15,20 +14,26 @@ struct path
 };
 
 // Path array
-path paths[PATH_ENTRIES] = { 0 };
+path paths[PATH_ENTRIES] = { NULL };
 // current ID for the path array
 unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
-path usData[SAMPLES] = { 0 };
+path usData[SAMPLES] = { NULL };
 
 // ----------------------------------------------------------
 // PROTOTYPES
 // ----------------------------------------------------------
-
-// Prototypes
 void initiateDrive();
 bool setPath(path newPath);
-void revertPath();
+void reversePath();
+
+// ----------------------------------------------------------
+// PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
+// ----------------------------------------------------------
+void drive(unsigned int distance, int angle);
+bool labLightVisible();
+void scanSurroundings();
+
 
 // ----------------------------------------------------------
 // FUNCTIONS
@@ -54,12 +59,11 @@ void loop()
 void initiateDrive()
 {
 	// We're standing on the lab, not knowing in which direction
-
-	/*	if (labLightVisible() == true)
-	/		drive(0, 180);
-	/	
-	/	scanSurroundings()
-	*/
+	if (labLightVisible() == true)
+		drive(0, 180);
+		
+	scanSurroundings();
+	
 }
 
 // Add a new path to the array for later reference
@@ -79,18 +83,26 @@ bool setPath(path newPath)
 }
 
 // Return to the lab by reversing the path array
-void revertPath()
+void reversePath()
 {
 	// omdraaien
-	// drive(0, 180);
+	drive(0, 180);
 
 	// Revert path, i to 0 to stop at the point before the base
 	for (int i = currentPathID; i > 0; --i)
 	{
-		// Convert angle
-		int angle = -1 * paths[i].angle;
-		// drive(paths[i].distance, paths[i].angle);
+		drive(paths[i].distance, -1*paths[i].angle);
 	}
+	// Look in the direction of the base (assumption)
+	drive(0, -1*paths[0].angle); 
 
-	// search base
+	// search base with light sensor (verify assumption)
+	if(labLightVisible() == true)
+	{
+		drive(paths[0].distance, 0);
+	} 
+	else {
+		// do something to find the lab back
+	}
+	
 }

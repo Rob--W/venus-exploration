@@ -26,13 +26,16 @@ path usData[SAMPLES] = { NULL };
 void initiateDrive();
 bool setPath(path newPath);
 void reversePath();
+void scanSurroundings();
+int minValue(path arrayData[], unsigned int arrayLength);
+int minValue(int arrayData[], unsigned int arrayLength);
 
 // ----------------------------------------------------------
 // PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
 // ----------------------------------------------------------
 void drive(unsigned int distance, int angle);
 bool labLightVisible();
-void scanSurroundings();
+unsigned int usTop(int angle);
 
 
 // ----------------------------------------------------------
@@ -58,12 +61,19 @@ void loop()
 // Start from lab
 void initiateDrive()
 {
+	path newPath;
+
 	// We're standing on the lab, not knowing in which direction
 	if (labLightVisible() == true)
 		drive(0, 180);
 		
 	scanSurroundings();
-	
+
+	newPath = paths[minValue(usData, SAMPLES + 1)];
+
+	setPath(newPath);
+
+	drive(newPath.distance, newPath.angle);
 }
 
 // Add a new path to the array for later reference
@@ -105,4 +115,59 @@ void reversePath()
 		// do something to find the lab back
 	}
 	
+}
+
+void scanSurroundings()
+{
+	// Calculate the desired angles based on the number of samples
+	int angleStep = 0;
+	int angle = -90;
+
+	if (angleStep = (180 % (SAMPLES - 1)) != 0)
+		angleStep = 30;
+	
+	// gather the samples
+	for (int i = 0; i < SAMPLES; ++i)
+	{
+		usData[i].angle = angle;
+		usData[i].distance = usTop(angle);
+		angle += angleStep;
+	}
+
+}
+
+// Determine the lowest distance value of a path array (returns the array index)
+int minValue(path arrayData[], unsigned int arrayLength)
+{
+	path temp = arrayData[0];
+	int minID = 0;
+
+	for (int i = 0; i < arrayLength; ++i)
+	{
+		if (arrayData[i].distance < temp.distance)
+		{
+			temp = arrayData[i];
+			minID = i;
+		}
+	}
+
+	return minID;
+}
+
+// Determine the lowest value of an integer array (returns the array index)
+int minValue(int arrayData[], unsigned int arrayLength)
+{
+	int temp = arrayData[0];
+	int minID = 0;
+
+	for (int i = 0; i < arrayLength; ++i)
+	{
+		if (arrayData[i] < temp)
+		{
+			temp = arrayData[i];
+			minID = i;
+		}
+	}
+
+	return minID;
 }

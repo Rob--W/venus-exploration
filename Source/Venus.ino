@@ -1,21 +1,40 @@
-#define PATH_ENTRIES  100
+// ----------------------------------------------------------
+// VARIABLE DECLARATION
+// ----------------------------------------------------------
 
-// Global variables
+// Maximum number of allowed paths
+#define PATH_ENTRIES	100
+#define SAMPLES			7
+
+
+// Path struct holds basic information about driven paths
 struct path
 {
 	unsigned int distance;
 	int angle;
 };
 
+// Path array
 path paths[PATH_ENTRIES] = { 0 };
+// current ID for the path array
 unsigned int currentPathID = 0;
+// Ultrasonic Sensor input array
+path usData[SAMPLES] = { 0 };
+
+// ----------------------------------------------------------
+// PROTOTYPES
+// ----------------------------------------------------------
 
 // Prototypes
 void initiateDrive();
 bool setPath(path newPath);
 void revertPath();
 
+// ----------------------------------------------------------
+// FUNCTIONS
+// ----------------------------------------------------------
 
+// Initiating Arduino hardware and serial communications
 void setup()
 {
 
@@ -23,6 +42,7 @@ void setup()
 	//blablabla better works
 }
 
+// Main program loop
 void loop()
 {
 
@@ -30,6 +50,7 @@ void loop()
 
 }
 
+// Start from lab
 void initiateDrive()
 {
 	// We're standing on the lab, not knowing in which direction
@@ -41,14 +62,12 @@ void initiateDrive()
 	*/
 }
 
+// Add a new path to the array for later reference
 bool setPath(path newPath)
 {
 	// Check whether the array isn't full
 	if (currentPathID >= PATH_ENTRIES)
 		return false;
-
-	// Convert angle
-	int angle = -1 * newPath.angle;
 
 	currentPathID += 1;
 
@@ -59,6 +78,7 @@ bool setPath(path newPath)
 	return true;
 }
 
+// Return to the lab by reversing the path array
 void revertPath()
 {
 	// omdraaien
@@ -67,6 +87,8 @@ void revertPath()
 	// Revert path, i to 0 to stop at the point before the base
 	for (int i = currentPathID; i > 0; --i)
 	{
+		// Convert angle
+		int angle = -1 * paths[i].angle;
 		// drive(paths[i].distance, paths[i].angle);
 	}
 

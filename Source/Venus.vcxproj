@@ -74,7 +74,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Visual Micro\.Source.vsarduino.h" />
-    <ClInclude Include="Visual Micro\.Venus.vsarduino.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,41 @@
-#include "constants.h"
+//#include "constants.h"
+
+#include "Arduino.h"
+#include <math.h>
+
+// Toggle to enable/disable serial output and debugging
+// NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
+// REDUCING FILESIZES AND SRAM USAGE
+#define DEBUG true				
+#define Serial if(DEBUG)Serial
+
+// ----------------------------------------------------------
+// VARIABLE DECLARATION
+// ----------------------------------------------------------
+
+#define PATH_ENTRIES	100		// Maximum number of allowed paths
+#define SAMPLES			7		// Number of samples to take for the top-US sensor
+#define PI				3.14159265359
+
+// Path struct holds basic information about driven paths
+struct path
+{
+	unsigned int distance;
+	float angle;
+};
+
+
+// current ID for the path array
+unsigned int currentPathID = 0;
+// Ultrasonic Sensor input array
+path usData[SAMPLES] = { NULL };
+
+// only for debugging purposes
+bool debugLoop = false;
+int loopCounter = 0;
+// Path array
+path paths[PATH_ENTRIES] = { NULL };
+
 
 // ----------------------------------------------------------
 // PROTOTYPES
@@ -9,7 +46,7 @@ void reversePath();
 void scanSurroundings();
 int minValue(path arrayData[], unsigned int arrayLength, bool min);
 int minValue(int arrayData[], unsigned int arrayLength, bool min);
-
+path shortestPath(unsigned int from, unsigned int to);
 
 // ----------------------------------------------------------
 // PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
@@ -37,9 +74,6 @@ void loop()
 
 
 	initiateDrive();
-	Serial.println(minValue(usData, SAMPLES, true));
-	Serial.println(usData[minValue(usData, SAMPLES, true)].distance);
-
 
 	while (debugLoop){};
 
@@ -54,6 +88,12 @@ void loop()
 			Serial.println(paths[i].distance);
 		}
 		Serial.println("-------");
+
+		path shortest = shortestPath(1, 5);
+
+		Serial.print(shortest.angle);
+		Serial.print(" - ");
+		Serial.println(shortest.distance);
 	}
 	else
 		++loopCounter;
@@ -124,6 +164,7 @@ void scanSurroundings()
 	int angleStep = 0;
 	int angle = -90;
 
+	// Check whether the wanted number of samples is legit and calculate the steps required
 	if (angleStep = (180 % (SAMPLES - 1)) != 0)
 		angleStep = 30;
 	else
@@ -135,13 +176,7 @@ void scanSurroundings()
 		usData[i].angle = angle;
 		//usData[i].distance = usTop(angle);
 		usData[i].distance = random(0, 300);
-
-		Serial.print(i);
-		Serial.print(" - ");
-		Serial.print(usData[i].angle);
-		Serial.print(" - ");
-		Serial.println(usData[i].distance);
-
+		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
 	}
 
@@ -204,4 +239,56 @@ int minValue(int arrayData[], unsigned int arrayLength, bool min = true)
 	}
 
 	return minID;
+}
+
+// Calculate the shortest path between to given points. Returned path is drive ready.
+path shortestPath(unsigned int from, unsigned int to)
+{
+	// Temporary variables
+	unsigned int pathDistance = 0;
+	float pathX = 0, pathY = 0;
+	int reverse = 1;
+	int start = 0;
+
+	// Determine whether we go forward or backward in our history
+	if (from > to)
+	{
+		reverse = -1;
+		start = to;
+		pathDistance = from - to;
+	}
+	else
+	{
+		start = from;
+		pathDistance = to - from;
+	}
+	
+	// Repetitive addition of the x and y projections of each path within the given range
+	for (int i = 0; i < pathDistance; ++i)
+	{
+		float x = 0, y = 0;
+		unsigned int distance = paths[i + start].distance;
+		int angle = paths[i + start].angle;
+
+		x = (distance)*cos(angle * (PI / 180));
+		y = (distance)*sin(angle * (PI / 180));
+
+		pathX += x;
+		pathY += y;
+	}
+
+
+	// create a new path
+	path newPath;
+
+	// The arduino will never drive in an angle bigger than +/- 90 degrees, because of the top us Sensor
+	// Therefore no check added for cases when the int may overflow due a bigger angle.
+	
+	// fill the path with the acquired data, so that it can be returned
+	// Distance is calculated using Pythagoras'squares
+	newPath.distance = (unsigned int)sqrt(pow(pathX, 2) + pow(pathY, 2));
+	// And the angle using the arc-cosine and the propertie of history (times 1 or -1)
+	newPath.angle = acos(pathX / newPath.distance)*(180 / PI) * reverse;
+
+	return newPath;
 }

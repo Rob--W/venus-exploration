@@ -1,8 +1,7 @@
-<<<<<<< HEAD
-//#include "constants.h"
-
 #include "Arduino.h"
 #include <math.h>
+#include <Servo.h>
+#include "Motioncontrol.h"
 
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
@@ -25,7 +24,6 @@ struct path
 	float angle;
 };
 
-
 // current ID for the path array
 unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
@@ -37,11 +35,18 @@ int loopCounter = 0;
 // Path array
 path paths[PATH_ENTRIES] = { NULL };
 
-=======
-#include <Servo.h>
-#include "constants.h"
-#include "Motioncontrol.h"
->>>>>>> origin/master
+Servo venusLeft;
+Servo venusRight;
+Servo servoUltra;
+Servo servoGrabber;
+
+const int leftservo = 12;
+const int rightservo = 13;
+const int ultraservo = 11;
+const int grabberservo = 10;
+const int leftencoder = 7;
+const int rightencoder = 8;
+
 
 // ----------------------------------------------------------
 // PROTOTYPES
@@ -82,8 +87,6 @@ void setup()
 // Main program loop
 void loop()
 {
-
-
 	initiateDrive();
 
 	while (debugLoop){};
@@ -121,6 +124,7 @@ void initiateDrive()
 		
 	scanSurroundings();
 	unsigned int minID = minValue(usData, SAMPLES, true);
+
 	newPath = usData[minID];
 
 	setPath(newPath);

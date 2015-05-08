@@ -1,32 +1,4 @@
-#include "Arduino.h"
-
-// Toggle to enable/disable serial output and debugging
-// NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
-// REDUCING FILESIZES AND SRAM USAGE
-#define DEBUG true				
-#define Serial if(DEBUG)Serial
-
-// ----------------------------------------------------------
-// VARIABLE DECLARATION
-// ----------------------------------------------------------
-
-#define PATH_ENTRIES	100		// Maximum number of allowed paths
-#define SAMPLES			7		// Number of samples to take for the top-US sensor
-
-
-// Path struct holds basic information about driven paths
-struct path
-{
-	unsigned int distance;
-	int angle;
-};
-
-// Path array
-path paths[PATH_ENTRIES] = { NULL };
-// current ID for the path array
-unsigned int currentPathID = 0;
-// Ultrasonic Sensor input array
-path usData[SAMPLES] = { NULL };
+#include "constants.h"
 
 // ----------------------------------------------------------
 // PROTOTYPES
@@ -35,11 +7,10 @@ void initiateDrive();
 bool setPath(path newPath);
 void reversePath();
 void scanSurroundings();
-int minValue(path arrayData[], unsigned int arrayLength);
-int minValue(int arrayData[], unsigned int arrayLength);
+int minValue(path arrayData[], unsigned int arrayLength, bool min);
+int minValue(int arrayData[], unsigned int arrayLength, bool min);
 
-bool debugLoop = false;
-int loopCounter = 0;
+
 // ----------------------------------------------------------
 // PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
 // ----------------------------------------------------------
@@ -66,8 +37,8 @@ void loop()
 
 
 	initiateDrive();
-	Serial.println(minValue(usData, SAMPLES));
-	Serial.println(usData[minValue(usData, SAMPLES)].distance);
+	Serial.println(minValue(usData, SAMPLES, true));
+	Serial.println(usData[minValue(usData, SAMPLES, true)].distance);
 
 
 	while (debugLoop){};
@@ -98,7 +69,7 @@ void initiateDrive()
 	//	drive(0, 180);
 		
 	scanSurroundings();
-	int minID = minValue(usData, SAMPLES);
+	unsigned int minID = minValue(usData, SAMPLES, true);
 	newPath = usData[minID];
 
 	setPath(newPath);

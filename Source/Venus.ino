@@ -1,3 +1,11 @@
+#include "Arduino.h"
+
+// Toggle to enable/disable serial output and debugging
+// NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
+// REDUCING FILESIZES AND SRAM USAGE
+#define DEBUG true				
+#define Serial if(DEBUG)Serial
+
 // ----------------------------------------------------------
 // VARIABLE DECLARATION
 // ----------------------------------------------------------
@@ -30,6 +38,8 @@ void scanSurroundings();
 int minValue(path arrayData[], unsigned int arrayLength);
 int minValue(int arrayData[], unsigned int arrayLength);
 
+bool debugLoop = false;
+int loopCounter = 0;
 // ----------------------------------------------------------
 // PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
 // ----------------------------------------------------------
@@ -45,17 +55,37 @@ unsigned int usTop(int angle);
 // Initiating Arduino hardware and serial communications
 void setup()
 {
-
-  /* add setup code here */
-	//blablabla better works
+	// Initiate serial communications
+	Serial.begin(9600);
+	
 }
 
 // Main program loop
 void loop()
 {
 
-  /* add main program code here */
 
+	initiateDrive();
+	Serial.println(minValue(usData, SAMPLES));
+	Serial.println(usData[minValue(usData, SAMPLES)].distance);
+
+
+	while (debugLoop){};
+
+	if (loopCounter > 5)
+	{
+		debugLoop = true;
+		Serial.println("Paths array");
+		for (int i = 0; i < 6; ++i)
+		{
+			Serial.print(paths[i].angle);
+			Serial.print(" - ");
+			Serial.println(paths[i].distance);
+		}
+		Serial.println("-------");
+	}
+	else
+		++loopCounter;
 }
 
 // Start from lab
@@ -64,16 +94,16 @@ void initiateDrive()
 	path newPath;
 
 	// We're standing on the lab, not knowing in which direction
-	if (labLightVisible() == true)
-		drive(0, 180);
+	//if (labLightVisible() == true)
+	//	drive(0, 180);
 		
 	scanSurroundings();
-
-	newPath = paths[minValue(usData, SAMPLES + 1)];
+	int minID = minValue(usData, SAMPLES);
+	newPath = usData[minID];
 
 	setPath(newPath);
 
-	drive(newPath.distance, newPath.angle);
+	//drive(newPath.distance, newPath.angle);
 }
 
 // Add a new path to the array for later reference
@@ -83,11 +113,11 @@ bool setPath(path newPath)
 	if (currentPathID >= PATH_ENTRIES)
 		return false;
 
-	currentPathID += 1;
-
 	// Store in array
 	paths[currentPathID].distance = newPath.distance;
 	paths[currentPathID].angle = newPath.angle;
+
+	currentPathID += 1;
 
 	return true;
 }
@@ -125,47 +155,80 @@ void scanSurroundings()
 
 	if (angleStep = (180 % (SAMPLES - 1)) != 0)
 		angleStep = 30;
+	else
+		angleStep = 180 / (SAMPLES - 1);
 	
 	// gather the samples
 	for (int i = 0; i < SAMPLES; ++i)
 	{
 		usData[i].angle = angle;
-		usData[i].distance = usTop(angle);
-		angle += angleStep;
+		//usData[i].distance = usTop(angle);
+		usData[i].distance = random(0, 300);
+
+		Serial.print(i);
+		Serial.print(" - ");
+		Serial.print(usData[i].angle);
+		Serial.print(" - ");
+		Serial.println(usData[i].distance);
+
+		angle = -90 + (i + 1)*angleStep;
 	}
 
 }
 
-// Determine the lowest distance value of a path array (returns the array index)
-int minValue(path arrayData[], unsigned int arrayLength)
+// Determine the lowest (or highest, set min to false) distance value of a path array (returns the array index)
+int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 {
 	path temp = arrayData[0];
 	int minID = 0;
 
 	for (int i = 0; i < arrayLength; ++i)
 	{
-		if (arrayData[i].distance < temp.distance)
+		if (min)
 		{
-			temp = arrayData[i];
-			minID = i;
+			if (arrayData[i].distance < temp.distance)
+			{
+				temp = arrayData[i];
+				minID = i;
+			}
 		}
+		else
+		{
+			if (arrayData[i].distance > temp.distance)
+			{
+				temp = arrayData[i];
+				minID = i;
+			}
+		}
+
 	}
 
 	return minID;
 }
 
-// Determine the lowest value of an integer array (returns the array index)
-int minValue(int arrayData[], unsigned int arrayLength)
+// Determine the lowest (or highest, set min to false) value of an integer array (returns the array index)
+int minValue(int arrayData[], unsigned int arrayLength, bool min = true)
 {
 	int temp = arrayData[0];
 	int minID = 0;
 
 	for (int i = 0; i < arrayLength; ++i)
 	{
-		if (arrayData[i] < temp)
+		if (min)
 		{
-			temp = arrayData[i];
-			minID = i;
+			if (arrayData[i] < temp)
+			{
+				temp = arrayData[i];
+				minID = i;
+			}
+		}
+		else
+		{
+			if (arrayData[i] > temp)
+			{
+				temp = arrayData[i];
+				minID = i;
+			}
 		}
 	}
 

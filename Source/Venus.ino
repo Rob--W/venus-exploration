@@ -1,7 +1,6 @@
 #include "Arduino.h"
 #include <math.h>
 #include <Servo.h>
-#include "Motioncontrol.h"
 
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
@@ -46,6 +45,11 @@ const int ultraservo = 11;
 const int grabberservo = 10;
 const int leftencoder = 7;
 const int rightencoder = 8;
+
+// ----------------------------------------------------------
+// ADDITIONAL INCLUDES
+// ----------------------------------------------------------
+#include "Motioncontrol.h"
 
 
 // ----------------------------------------------------------

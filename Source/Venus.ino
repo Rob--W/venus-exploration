@@ -1,4 +1,6 @@
+#include <Servo.h>
 #include "constants.h"
+#include "Motioncontrol.h"
 
 // ----------------------------------------------------------
 // PROTOTYPES
@@ -28,6 +30,11 @@ void setup()
 {
 	// Initiate serial communications
 	Serial.begin(9600);
+	venusLeft.attach(leftservo,1300,1700);
+    venusRight.attach(rightservo,1300,1700);
+    servoUltra.attach(ultraservo,540,2400);
+    servoGrabber.attach(grabberservo,540,2400);
+    pinMode(leftencoder, INPUT);
 	
 }
 

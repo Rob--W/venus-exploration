@@ -31,3 +31,15 @@ bool debugLoop = false;
 int loopCounter = 0;
 // Path array
 path paths[PATH_ENTRIES] = { NULL };
+
+Servo venusLeft;
+Servo venusRight;
+Servo servoUltra;
+Servo servoGrabber;
+
+int leftservo = 12;
+int rightservo = 13;
+int ultraservo = 11;
+int grabberservo = 10;
+int leftencoder = 7;
+int rightencoder = 8;

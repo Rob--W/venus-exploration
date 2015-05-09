@@ -19,8 +19,16 @@
 // Path struct holds basic information about driven paths
 struct path
 {
+	// unsigned to prevent negative numbers
 	unsigned int distance;
-	float angle;
+	// int due SRAM limitations, otherwise consuming 32*PATH_ENTRIES bytes
+	int angle;
+};
+
+struct position
+{
+	long x;
+	long y;
 };
 
 // current ID for the path array
@@ -107,7 +115,7 @@ void loop()
 		}
 		Serial.println("-------");
 
-		path shortest = shortestPath(1, 5);
+		path shortest = shortestPath(4, 2);
 
 		Serial.print(shortest.angle);
 		Serial.print(" - ");
@@ -261,53 +269,76 @@ int minValue(int arrayData[], unsigned int arrayLength, bool min = true)
 }
 
 // Calculate the shortest path between to given points. Returned path is drive ready.
+// NEEDS TO BE TESTED ON THE ROBOT
 path shortestPath(unsigned int from, unsigned int to)
 {
-	// Temporary variables
 	unsigned int pathDistance = 0;
+	path newPath;
+	float x = 0, y = 0;
+	float angle = 90;				// Correction due rotated axis
+	int finalAngle = 0;
 	float pathX = 0, pathY = 0;
-	int reverse = 1;
-	int start = 0;
-
-	// Determine whether we go forward or backward in our history
+	int distance = 0;
+	short int invert;
+	int reverse = 0;
+	bool reversePath = false;
+	
+	// Check whether we want to reverse the path
 	if (from > to)
 	{
-		reverse = -1;
-		start = to;
-		pathDistance = from - to;
+		// If so, swap the values so that we go from low to high through the array
+		int temp = to;
+		to = from;
+		from = temp;
+		reversePath = true;
+		
 	}
-	else
-	{
-		start = from;
-		pathDistance = to - from;
-	}
-	
-	// Repetitive addition of the x and y projections of each path within the given range
-	for (int i = 0; i < pathDistance; ++i)
-	{
-		float x = 0, y = 0;
-		unsigned int distance = paths[i + start].distance;
-		int angle = paths[i + start].angle;
 
-		x = (distance)*cos(angle * (PI / 180));
-		y = (distance)*sin(angle * (PI / 180));
+	// Then calculate the distance between the array indices
+	pathDistance = to - from;
 
+	// Repeatedly add the conversions from polar to cartesian
+	for (int i = from; i - from < pathDistance; ++i)
+	{
+		// Calculate absolute angle
+		angle += (paths[i].angle);
+		distance = paths[i].distance;
+
+		// Convert from polar to cartesian, minding the rotation of the field
+		x = distance*cos(angle * PI / 180); 
+		y = distance*sin(angle * PI / 180);
+
+		// Add the coordinates 
 		pathX += x;
 		pathY += y;
 	}
+	Serial.println(pathX);
+	Serial.println(pathY);
 
+	// Correction when the x-values are negative
+	if (pathX < 0)
+	{
+		invert = -1;
+		reverse = 180;
+	}
 
-	// create a new path
-	path newPath;
+	// Calculate the shortest distance using Pythagoras. Rounding to prevent inaccuracy due conversion from float to int
+	newPath.distance = round(sqrt(pow(pathX, 2) + pow(pathY, 2)));
+	// And the angle using the  arc-tan and the corrections
+	finalAngle =  round((atan(pathY / pathX))*(180 / PI)*invert - reverse);
 
-	// The arduino will never drive in an angle bigger than +/- 90 degrees, because of the top us Sensor
-	// Therefore no check added for cases when the int may overflow due a bigger angle.
-	
-	// fill the path with the acquired data, so that it can be returned
-	// Distance is calculated using Pythagoras'squares
-	newPath.distance = (unsigned int)sqrt(pow(pathX, 2) + pow(pathY, 2));
-	// And the angle using the arc-cosine and the propertie of history (times 1 or -1)
-	newPath.angle = acos(pathX / newPath.distance)*(180 / PI) * reverse;
+	// Extra correction when we want to drive the path in reverse direction
+	if (reversePath && finalAngle < 0)
+	{
+		finalAngle += 180;
+	}
+	else if (reversePath && finalAngle > 0)
+	{
+		finalAngle -= 180;
+	}
+
+	// Apply the final angle
+	newPath.angle = finalAngle;
 
 	return newPath;
 }

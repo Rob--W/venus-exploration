@@ -8,12 +8,29 @@
 #define DEBUG true				
 #define Serial if(DEBUG)Serial
 
+// NOTE
+// Everything which has been given in degrees, uses a rotated polar system as reference:
+//
+//								  0
+//							
+//								o ^ o 
+//							 o    |    o  
+//						+90	o     |     o -90
+//							o     |     o 
+//							 o    |    o 
+//							    o   o
+//							
+//								+/-180
+//
+// It is not efficient to turn more than 180 degrees
+
+
 // ----------------------------------------------------------
 // VARIABLE DECLARATION
 // ----------------------------------------------------------
 
-#define PATH_ENTRIES	100		// Maximum number of allowed paths
-#define SAMPLES			7		// Number of samples to take for the top-US sensor
+#define PATH_ENTRIES	100				// Maximum number of allowed paths
+#define SAMPLES			7				// Number of samples to take for the top-US sensor
 #define PI				3.14159265359
 
 // Path struct holds basic information about driven paths
@@ -27,8 +44,8 @@ struct path
 
 struct position
 {
-	long x;
-	long y;
+	int x;
+	int y;
 };
 
 // current ID for the path array
@@ -187,6 +204,7 @@ void reversePath()
 
 void scanSurroundings()
 {
+	
 	// Calculate the desired angles based on the number of samples
 	int angleStep = 0;
 	int angle = -90;
@@ -272,6 +290,7 @@ int minValue(int arrayData[], unsigned int arrayLength, bool min = true)
 // NEEDS TO BE TESTED ON THE ROBOT
 path shortestPath(unsigned int from, unsigned int to)
 {
+	// Working variables
 	unsigned int pathDistance = 0;
 	path newPath;
 	float x = 0, y = 0;
@@ -279,7 +298,7 @@ path shortestPath(unsigned int from, unsigned int to)
 	int finalAngle = 0;
 	float pathX = 0, pathY = 0;
 	int distance = 0;
-	short int invert;
+	short int invert = 1;
 	int reverse = 0;
 	bool reversePath = false;
 	

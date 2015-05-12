@@ -31,7 +31,7 @@
 
 #define PATH_ENTRIES	100				// Maximum number of allowed paths
 #define SAMPLES			7				// Number of samples to take for the top-US sensor
-#define PI				3.14159265359
+#define PI				3.14159265359	// Obviously
 
 // Path struct holds basic information about driven paths
 struct path
@@ -56,14 +56,17 @@ path usData[SAMPLES] = { NULL };
 // only for debugging purposes
 bool debugLoop = false;
 int loopCounter = 0;
+
 // Path array
 path paths[PATH_ENTRIES] = { NULL };
 
+// Create servo instances using the Servo class
 Servo venusLeft;
 Servo venusRight;
 Servo servoUltra;
 Servo servoGrabber;
 
+// Pin constants
 const int leftservo = 12;
 const int rightservo = 13;
 const int ultraservo = 11;
@@ -105,6 +108,8 @@ void setup()
 {
 	// Initiate serial communications
 	Serial.begin(9600);
+
+	// Attach servo's
 	venusLeft.attach(leftservo,1300,1700);
     venusRight.attach(rightservo,1300,1700);
     servoUltra.attach(ultraservo,540,2400);
@@ -116,6 +121,8 @@ void setup()
 // Main program loop
 void loop()
 {
+	// Uncomment only when you want to test the path thingy
+	/*
 	initiateDrive();
 
 	while (debugLoop){};
@@ -140,6 +147,7 @@ void loop()
 	}
 	else
 		++loopCounter;
+	*/
 }
 
 // Start from lab
@@ -148,17 +156,24 @@ void initiateDrive()
 	path newPath;
 
 	// We're standing on the lab, not knowing in which direction
-	//if (labLightVisible() == true)
-	//	drive(0, 180);
-		
+	if (labLightVisible() == true)
+		drive(0, 180);
+	
+	// Gain information using the top US-sensor
 	scanSurroundings();
+	// Get the interesting information from the acquired data
 	unsigned int minID = minValue(usData, SAMPLES, true);
 
+	// Set a new path to the closest detected object 
+	// Must be extended using the padding matrix to determine
+	// whether we've already been there.
 	newPath = usData[minID];
 
+	// Add path to array
 	setPath(newPath);
 
-	//drive(newPath.distance, newPath.angle);
+	// Drive to it
+	drive(newPath.distance, newPath.angle);
 }
 
 // Add a new path to the array for later reference
@@ -178,6 +193,7 @@ bool setPath(path newPath)
 }
 
 // Return to the lab by reversing the path array
+// NOT TESTED AT ALL
 void reversePath()
 {
 	// omdraaien
@@ -202,6 +218,7 @@ void reversePath()
 	
 }
 
+// Compute desired angles for the top US-sensor and store the measured data so that it can be used by other functions
 void scanSurroundings()
 {
 	
@@ -220,7 +237,7 @@ void scanSurroundings()
 	{
 		usData[i].angle = angle;
 		//usData[i].distance = usTop(angle);
-		usData[i].distance = random(0, 300);
+		usData[i].distance = random(0, 300);	// remove this line when there is an actual input
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
 	}
@@ -233,10 +250,13 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 	path temp = arrayData[0];
 	int minID = 0;
 
+	// Run through the entire array
 	for (int i = 0; i < arrayLength; ++i)
 	{
+		// Check whether we want the min of max value
 		if (min)
 		{
+			// Check whether there is a value lower that the previously lowest value.
 			if (arrayData[i].distance < temp.distance)
 			{
 				temp = arrayData[i];
@@ -245,6 +265,7 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 		}
 		else
 		{
+			// Check whether there is value larger than the previous largest value.
 			if (arrayData[i].distance > temp.distance)
 			{
 				temp = arrayData[i];
@@ -254,6 +275,7 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 
 	}
 
+	// Return the array ID of the wanted value.
 	return minID;
 }
 
@@ -331,8 +353,11 @@ path shortestPath(unsigned int from, unsigned int to)
 		pathX += x;
 		pathY += y;
 	}
+	// Debugging purposes
+	/*
 	Serial.println(pathX);
 	Serial.println(pathY);
+	*/
 
 	// Correction when the x-values are negative
 	if (pathX < 0)
@@ -346,7 +371,7 @@ path shortestPath(unsigned int from, unsigned int to)
 	// And the angle using the  arc-tan and the corrections
 	finalAngle =  round((atan(pathY / pathX))*(180 / PI)*invert - reverse);
 
-	// Extra correction when we want to drive the path in reverse direction
+	// Extra correction when we want to drive the path in reverse direction (need to find out why this is necessary)
 	if (reversePath && finalAngle < 0)
 	{
 		finalAngle += 180;
@@ -361,3 +386,4 @@ path shortestPath(unsigned int from, unsigned int to)
 
 	return newPath;
 }
+

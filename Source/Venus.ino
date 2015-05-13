@@ -387,3 +387,16 @@ path shortestPath(unsigned int from, unsigned int to)
 	return newPath;
 }
 
+// Convert waypoint to coordinates
+position toCartesian(path pCoordinate)
+{
+	position cPosition;
+	int distance = pCoordinate.distance;
+	unsigned int angle = pCoordinate.angle;
+
+	// Convert polar to coordinates
+	cPosition.x = distance*cos(angle * PI / 180);
+	cPosition.y = distance*sin(angle * PI / 180);
+
+	return cPosition;
+}

@@ -25,6 +25,12 @@
 // It is not efficient to turn more than 180 degrees
 
 
+
+// Things that must be included in other parts:
+// - Set latestBaseIndex to the the currentIndex when restarting from the base
+// - Use ShortestDistance to get back on track when driving around a cliff
+// - New waypoints needs to be checked in the matrix
+
 // ----------------------------------------------------------
 // VARIABLE DECLARATION
 // ----------------------------------------------------------
@@ -59,6 +65,7 @@ int loopCounter = 0;
 
 // Path array
 path paths[PATH_ENTRIES] = { NULL };
+unsigned int latestBaseIndex = 0;
 
 // Create servo instances using the Servo class
 Servo venusLeft;
@@ -90,7 +97,7 @@ void scanSurroundings();
 int minValue(path arrayData[], unsigned int arrayLength, bool min);
 int minValue(int arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
-
+position toCartesian(path toCoordinate);
 // ----------------------------------------------------------
 // PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
 // ----------------------------------------------------------
@@ -215,6 +222,8 @@ void reversePath()
 	else {
 		// do something to find the lab back
 	}
+
+	
 	
 }
 

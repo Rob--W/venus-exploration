@@ -31,68 +31,15 @@ void stop(){	//Stop function, makes the robot stop driving (if the servo's are p
 	venusRight.write(90);
 }
 
-void drive(int distance, int angle){ //drive function with integer parameters distance and angle in degrees
-	//turn part
-	angle = angle % 360; //2*pirad*k=2*pirad*(k+1)
-
-	if (angle < 180){	//turn right
-		int turnn;
-		int turnpulse;
-		int turnprevpulse;
-		int turncountpulse = 0;
-
-		turnn = (((angle * 105/*base length = 10.5 mm*/ / 360) * 10) / 1317); //Number of pulses needed to drive distance
-		turnprevpulse = digitalRead(rightencoder); //initial value encoder
-
-		venusLeft.write(180);
-		venusRight.write(180);
-
-		while (turnn > turncountpulse){
-			turnpulse = digitalRead(rightencoder);
-			if (turnpulse != turnprevpulse){
-				turnprevpulse = turnpulse;
-				turncountpulse += 1;
-			}
-			//Hole sensing has to be implemented
-		}
-	}
-	else{	//turn left
-		int newangle;
-		int turnn;
-		int turnpulse;
-		int turnprevpulse;
-		int turncountpulse = 0;
-
-		newangle = (angle - 180);
-
-		turnn = (((newangle * 105/*base length*/ / 360) * 10) / 1317); //Number of pulses needed to drive distance
-		turnprevpulse = digitalRead(rightencoder); //initial value encoder
-
-		venusLeft.write(0);
-		venusRight.write(0);
-
-		while (turnn < turncountpulse){
-			turnpulse = digitalRead(rightencoder);
-			if (turnpulse != turnprevpulse){
-				turnprevpulse = turnpulse;
-				turncountpulse += 1;
-			}
-		}
-		stop();
-		
-	}
-
-	//forward movement part
-	int n;
+void servoDrive(int left, int right, int n){
 	int pulse;
 	int prevpulse;
 	int countpulse = 0;
 
-	n = ((distance * 100) / 1317); //Number of pulses needed to drive distance
 	prevpulse = digitalRead(rightencoder); //initial value encoder
 
-	venusLeft.write(180);
-	venusRight.write(0);
+	venusLeft.write(left);
+	venusRight.write(right);
 
 	while (n<countpulse){
 		pulse = digitalRead(rightencoder);
@@ -105,27 +52,26 @@ void drive(int distance, int angle){ //drive function with integer parameters di
 	stop();
 }
 
+void drive(int distance, int angle){ //drive function with integer parameters distance and angle in degrees
+	//turn part
+	angle = angle % 360; //2*pirad*k=2*pirad*(k+1)
+	if (angle < 180){	//turn right
+		int turnn = (((angle * 10,5/*base length = 10.5 cm*/ / 360) * 10) / 1317); //Number of pulses needed to drive distance
+		servoDrive(180, 180, turnn);
+	}
+	else{	//turn left
+		int turnn = ((((angle - 180) * 105/*base length*/ / 360) * 10) / 1317); //Number of pulses needed to drive distance
+		servoDrive(0, 0, turnn);
+	}
+	//forward movement part
+	int n = ((distance * 100) / 1317); //Number of pulses needed to drive distance. Distance in mm
+	servoDrive(180, 0, n);
+}
+
 
 void reverse(int distance){	//Makes the robot drive backwards a certain distance
-	int n;
-	int pulse;
-	int prevpulse;
-	int countpulse=0;
-
-	n = ((distance * 100) / 1317); //Number of pulses needed to drive distance
-	prevpulse = digitalRead(rightencoder); //initial value encoder
-
-	venusLeft.write(0);
-	venusRight.write(180);
-
-	while (n<countpulse){
-		pulse = digitalRead(rightencoder);
-		if (pulse != prevpulse){
-			prevpulse = pulse;
-			countpulse += 1;
-		}
-	}
-
+	int n = ((distance * 100) / 1317); //Number of pulses needed to drive distance
+	servoDrive(0, 180, n);
 }
 
 int readIRLB(){		//Reads IR Left Bottom. Return unit to be determined

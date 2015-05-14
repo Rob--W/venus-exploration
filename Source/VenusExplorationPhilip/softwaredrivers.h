@@ -4,6 +4,8 @@ void startSetup(); //Content needed for the pin initialisation in function setup
 
 void stop();	//Stop function, makes the robot stop driving (if the servo's are properly set)
 
+void servoDrive(int left, int right, int n);	//servo control for the repetitive part of the drive functions.
+
 void drive(int distance, int angle);//drive function with integer parameters distance and angle in degrees
 
 void reverse(int distance);	//Makes the robot drive backwards a certain distance

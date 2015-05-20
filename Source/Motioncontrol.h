@@ -1,70 +1,84 @@
-void closeGrabber(){
+void closeGrabber()
+{
  // servoGrabber.attach(grabberservo);
   servoGrabber.write(180);
   //servoGrabber.detach();
 }
 
-void openGrabber(){
+void openGrabber()
+{
   //servoGrabber.attach(grabberservo);
   servoGrabber.write(0);
   //servoGrabber.detach();
 }
 
-void lookAhead(){
+void lookAhead()
+{
   // servoUltra.attach(grabberservo);
   servoUltra.write(90);
   //servoUltra.detach();
 }
 
-void lookLeft(){
+void lookLeft()
+{
  // servoUltra.attach(grabberservo);
   servoUltra.write(180);
   //servoUltra.detach();
 }
 
-void lookRight(){
+void lookRight()
+{
  // servoUltra.attach(grabberservo);
   servoUltra.write(0);
   //servoUltra.detach();
 }
 
-void lookAngle(int angle){// an angle of 180 means it wil look to its left, an angle of 0 means it will look to its right, an angle of 90 means it will look straight(-ish) ahead
+void lookAngle(int angle)
+{// an angle of 180 means it wil look to its left, an angle of 0 means it will look to its right, an angle of 90 means it will look straight(-ish) ahead
   // servoUltra.attach(grabberservo);
   servoUltra.write(angle);
   //servoUltra.detach();
 }
 
-void goForward(){
+void goForward()
+{
   venusLeft.write(180);
   venusRight.write(0);
 }
-void goStop(){
+void goStop()
+{
     venusLeft.write(90);
     venusRight.write(90);  
 }
 
-void goBack(){
+void goBack()
+{
   venusLeft.write(0);
   venusRight.write(180);
 }
 
-void turnLeft(){//needs calculations with the digital encoder on the wheels to give a more controlled value of turning angle
+void turnLeft()
+{//needs calculations with the digital encoder on the wheels to give a more controlled value of turning angle
   venusLeft.write(180);
   venusRight.write(180);
 }
 
-void turnRight(){//needs calculations with the digital encoder on the wheels to give a more controlled value of turning angle
+void turnRight()
+{//needs calculations with the digital encoder on the wheels to give a more controlled value of turning angle
   venusLeft.write(0);
   venusRight.write(0);
 }
 
-boolean detectLeftEncoderState(){
+boolean detectLeftEncoderState()
+{
  return digitalRead(leftencoder);
   
 }
-int detectLeftEncoderPulses(boolean reading){
+int detectLeftEncoderPulses(boolean reading)
+{
   boolean leftEncoderState = detectLeftEncoderState();
-  if (reading != leftEncoderState) {
+  if (reading != leftEncoderState) 
+  {
     reading = leftEncoderState;
     return 1;
   }
@@ -72,7 +86,8 @@ int detectLeftEncoderPulses(boolean reading){
 }
 void scan();
 
-void moveForward(double distance){
+void moveForward(double distance)
+{
   int givenPulses;
   int inputPulses = 0;
   boolean reading = detectLeftEncoderState();
@@ -86,7 +101,8 @@ void moveForward(double distance){
   goStop();
 }
   
-void moveRotate(double angle){
+void moveRotate(double angle)
+{
   int givenPulses;
   int inputPulses = 0;
   givenPulses = angle/14.116;
@@ -95,4 +111,20 @@ void moveRotate(double angle){
     turnLeft();
     inputPulses = detectLeftEncoderPulses(reading) + inputPulses;
   }
+}
+
+void drive(double angle, double distance)
+{
+	if (angle != 0)
+	{
+		moveRotate(angle);
+	}
+	else
+	{
+		if (distance != 0)
+		{
+			moveForward(distance);
+		}
+	}
+
 }

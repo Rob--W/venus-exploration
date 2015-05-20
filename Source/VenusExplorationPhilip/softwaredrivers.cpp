@@ -96,17 +96,79 @@ int readLightSense(){	//Reads Light Sensor. Return unit to be determined
 
 }
 
+int microsecondsToCentimeters(int microseconds)
+{
+	// The speed of sound is 340 m/s or 29 microseconds per centimeter.
+	// The ping travels out and back, so to find the distance of the
+	// object we take half of the distance travelled.
+	return microseconds / 29 / 2;
+}
+
 int readUltraTop(int angle){		//Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
 	servoUltra.write(angle);
-	/*
-	ultra read code
-	*/
+	// establish variables for duration of the ping, 
+	// and the distance result in inches and centimeters:
+	int duration, inches, cm;
+
+	// The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
+	// Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
+	pinMode(pingPin, OUTPUT);
+	digitalWrite(pingPin, LOW);
+	delayMicroseconds(2);
+	digitalWrite(pingPin, HIGH);
+	delayMicroseconds(5);
+	digitalWrite(pingPin, LOW);
+
+	// The same pin is used to read the signal from the PING))): a HIGH
+	// pulse whose duration is the time (in microseconds) from the sending
+	// of the ping to the reception of its echo off of an object.
+	pinMode(pingPin, INPUT);
+	duration = pulseIn(pingPin, HIGH);
+
+	// convert the time into a distance
+	cm = microsecondsToCentimeters(duration);
+
+	Serial.print(inches);
+	Serial.print("in, ");
+	Serial.print(cm);
+	Serial.print("cm");
+	Serial.println();
+
+	delay(100);
+	return cm;
 }
 
 int readUltraBot(){
-	/*
-	ultra read code
-	*/
+	// establish variables for duration of the ping, 
+	// and the distance result in inches and centimeters:
+	int duration, inches, cm;
+
+	// The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
+	// Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
+	pinMode(pingPin, OUTPUT);
+	digitalWrite(pingPin, LOW);
+	delayMicroseconds(2);
+	digitalWrite(pingPin, HIGH);
+	delayMicroseconds(5);
+	digitalWrite(pingPin, LOW);
+
+	// The same pin is used to read the signal from the PING))): a HIGH
+	// pulse whose duration is the time (in microseconds) from the sending
+	// of the ping to the reception of its echo off of an object.
+	pinMode(pingPin, INPUT);
+	duration = pulseIn(pingPin, HIGH);
+
+	// convert the time into a distance
+	cm = microsecondsToCentimeters(duration);
+
+	Serial.print(inches);
+	Serial.print("in, ");
+	Serial.print(cm);
+	Serial.print("cm");
+	Serial.println();
+
+	delay(100);
+	return cm;
 }
 void openGrabber(){
 	//servoGrabber.attach(grabberservo);

@@ -32,20 +32,13 @@ ALS IR 30-80% detect op RAMP.
 
 
 */
-void drive();
-void stop();
-void bdrive();
-void IRO();
-void grab();
-int IRM();
-int IRG();
-int light();
-int USU();
-int USD();
+void IRU();
+void IRM();
+void IRG();
+void light();
+void USU();
+void USD();
 int counter = 0;
-unsigned int intensiteitB;
-bool intensiteitM;
-bool intensiteitG;
 // the setup function runs once when you press reset or power the board
 void setup() {
 	
@@ -54,45 +47,75 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-	stop();
-	USU();
-	USD();
-	if (USU() < ){
+	stop(); //stop
 
+}
+/*UltrasoonUP*/
+void USU(){
+	if (readUltraTop() > 280){
+		if (readUltraBot() < 280){							//we might have found a stone
+			drive(readUltraBot());							// go for it wall-e
+			stop();
+			USU();											//make a re-check, calibration
+		}
+		else{												//nothing found yet
+			drive(25, 0);									//we drive a little further and try it again
+			USU();
+		}
 	}
-	else if(USU( > && < ){
-
-	}
-	else if(USU() > ){
-
+	else if (readUltraTop() > 40 && readUltraTop() < 280){
+		if (abs(readUltraBot() - readUltraTop()) < 10){
+			drive(readUltraTop());						//we are going on an adventure
+		}
+		else if ((readUltraBot() - readUltraTop()) > 10){ //There is an object closer to Top than Bot so let's explore it
+			drive(readUltraTop());
+		}
+		else{											//maybe a possible stone 0.o
+			drive(readUltraBot());
+		}
 	}
 	else{
+		if (abs( readUltraBot() - readUltraTop() ) > 10){ //we are standing in front of a rock....
+			stop();
+			drive(10, 90);									//rotate 10 cm to the right
+			USU();											//repeat le process
+		}
+		else{
+			stop();
+			IRM();										//start stone scan procedure
 	}
-
 }
 
-int USD(){
-	
+	/*UltrasoonDown*/
+void USD(){
+	if (readUltraBot() < 15){
+		drive(5, 0);			//rijd er nog iets dichter naartoe
+		IRM();
+	}//re-scan
+	else{
+		USU();					//false alarm, retry
+	}
 }
 
-/*IRO*/
-void IRO(){
-	if (intensiteitB < 15){
-		stop();			//auto stopt, want cliff of einde map
-		if (USU() > 0){
-			drive(/*gegeven input coördinaten USU*/);
+/*IRUnder*/
+void IRU(){
+	if (readIRLB() || readIRRB() < 15){
+		stop();												//car stops, because end of the world or a cliff
+		if (readUltraTop > 0){
+			drive(readUltraTop());
 		}
-		else{		//geen nieuw punt gevonden
-			drive(5, 90); // rijd 10cm naar rechts
-			drive(0, -90); //draai weer naar oorspronkelijke punt
-			drive(/*richting oorspronkelijke punt*/);
+		else{												//no new point found
+			drive(5, 90);									//drive 5cm to the right
+			drive(0, -90);									//drive back to the left
+			drive(/*shortestpath functie*/);
 		}
-		if (intensiteitB > 100 && intensiteitB< 240){
-			if (counter > 2){
-				;//grijper los
+		if (readIRLB() || readIRRB > 100 && readIRLB() || readIRRB< 240){
+			if (counter > 0){								//count grey stripes
+				openGrabber();								//drop the stone
 				counter = 0;
+				reverse(25);
 			}
-			else{
+			else{											//i can count grey stripes
 				++counter;
 			}
 		}
@@ -101,33 +124,34 @@ void IRO(){
 		}
 	}
 
-	/*IRM*/
+	/*IRMmid*/
 	bool IRM(){
-		if (intensiteitM == 1){
+		if (readIRMid() == 1){
 			drive(5, 0);
 			stop();
-			grab(); //moet nog weten wat de juiste benaming is voor deze functie
+			openGrabber();					//get the stone
+			closeGrabber();					//we got the stone
+			reversePath();					//get the stone home wall-e
 		}
 		else{
-			stop();
-			USU();
-			USD();
-		
+			stop();							//stop
+			USD();							//so what did i see
 		}
+	}
 
-		}
-
-	/*IRG*/
+	/*IRGrabber*/
 	bool IRG(){
-		if (intensiteitG == 0){
+		if (readIRGrab() == 0){				//We found a wall of the lab, but not the ramp
 			stop();
-			drive(5, 90);
+			drive(5, 90);					// 5 cm to the right
 			stop();
-			drive(0, -90);
-			IRG();
+			drive(0, -90);					//back to the begin position
+			IRG();							//retry if we found the
 		}
-		else{
-			drive(20, 0);
-			stop();
+		else{								//we found the ramp, go for it wall-e
+			drive(5, 0);					//straight to the the goal	
+			IRU();							//scan the ground for the grey stripes
+			stop();							//stop
+			IRG();							//drive further
 		}
 	}

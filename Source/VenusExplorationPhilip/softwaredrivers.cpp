@@ -13,6 +13,8 @@ const int rightservo = 13;
 const int ultraservo = 11;
 const int grabberservo = 10;
 
+
+
 const int leftencoder = 7;
 const int rightencoder = 8;
 
@@ -39,7 +41,7 @@ void stop(){	//Stop function, makes the robot stop driving (if the servo's are p
 	venusRight.write(90);
 }
 
-void servoDrive(int left, int right, int n){
+void servoDrive(int left, int right, int n){ 
 	int pulse;
 	int prevpulse;
 	int countpulse = 0;

@@ -2,6 +2,8 @@
 
 void startSetup(); //Content needed for the pin initialisation in function setup()
 
+void turn();
+
 int readIRLB();		//Reads IR Left Bottom. Return unit to be determined
 
 int readIRRB();		//Reads IR Right Bottom. Return unit to be determined

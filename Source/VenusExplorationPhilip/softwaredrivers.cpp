@@ -20,6 +20,8 @@ const int rightencoder = 8;
 
 const int pingPin = 9;
 
+
+
 void startSetup(){
 	venusLeft.attach(leftservo, 540, 2400);
 	venusRight.attach(rightservo, 540, 2400);
@@ -28,6 +30,11 @@ void startSetup(){
 
 	pinMode(leftencoder, INPUT);
 	pinMode(rightencoder, INPUT);
+}
+
+void turn(){
+	venusLeft.write(120);
+	venusRight.write(120);
 }
 
 int readIRLB(){		//Reads IR Left Bottom. Return unit to be determined
@@ -73,12 +80,12 @@ void drive(int distance, int angle){ //drive function with integer parameters di
 	//turn part
 	angle = angle % 360; //2*pirad*k=2*pirad*(k+1)
 	if (angle < 180){	//turn right
-		int turnn = (angle *(10 / 1437)); //Number of pulses needed to turn
-		servoDrive(180, 180, turnn);
+		int turnn = ((angle *100) / 1437); //Number of pulses needed to turn
+		servoDrive(100, 100, turnn);
 	}
 	else{	//turn left
-		int turnn = ((angle - 180) *(10 / 1437)); //Number of pulses needed to turn
-		servoDrive(0, 0, turnn);
+		int turnn = (((angle - 180) *100) / 1437); //Number of pulses needed to turn
+		servoDrive(80, 80, turnn);
 	}
 	//forward movement part
 	int n = ((distance*100) / 1317); //Number of pulses needed to drive distance. Distance in mm

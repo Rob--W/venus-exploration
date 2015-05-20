@@ -18,6 +18,8 @@ const int grabberservo = 10;
 const int leftencoder = 7;
 const int rightencoder = 8;
 
+const int pingPin = 9;
+
 void startSetup(){
 	venusLeft.attach(leftservo, 540, 2400);
 	venusRight.attach(rightservo, 540, 2400);

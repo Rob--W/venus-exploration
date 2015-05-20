@@ -62,9 +62,9 @@ void servoDrive(int left, int right, int n){
 		//400 is arbitrary between  0 and 1024. This has to be tested. 
 		//The value is somewhere in between 0 and 2^8 because of a change in light and dark reception of the sensor.
 		//it will never be completly dark, that is why the value will never be zero.
-		if (readIRLB() < 400 || readIRRB() < 400){//hole sensing code has to be added
+		/*if (readIRLB() < 400 || readIRRB() < 400){//hole sensing code has to be added
 			break; //Some kind of notification has to be added that an emergency brake has been executed.
-		}
+		}*/
 	}
 	stop();
 }
@@ -81,12 +81,13 @@ void drive(int distance, int angle){ //drive function with integer parameters di
 		servoDrive(0, 0, turnn);
 	}
 	//forward movement part
-	int n = ((distance)*(10 / 1437)); //Number of pulses needed to drive distance. Distance in mm
+	int n = ((distance*100) / 1317); //Number of pulses needed to drive distance. Distance in mm
 	servoDrive(180, 0, n);
 }
 
 void reverse(int distance){	//Makes the robot drive backwards a certain distance
-	int n = ((distance)*(10 / 1437)); //Number of pulses needed to drive distance
+	int n = ((distance*100) / 1317); //Number of pulses needed to drive distance
+	Serial.println(n);
 	servoDrive(0, 180, n);
 }
 

@@ -76,11 +76,18 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="softwaredrivers.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="startsetup.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
     <ClInclude Include="VenusExplorationPhilip\softwaredrivers.h" />
     <ClInclude Include="VenusExplorationPhilip\startsetup.h" />
     <ClInclude Include="Visual Micro\.Source.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="softwaredrivers.cpp" />
     <ClCompile Include="VenusExplorationPhilip\softwaredrivers.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

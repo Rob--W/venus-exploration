@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include <math.h>
 #include <Servo.h>
-
+#include "softwaredrivers.h"
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
 // REDUCING FILESIZES AND SRAM USAGE
@@ -67,24 +67,11 @@ int loopCounter = 0;
 path paths[PATH_ENTRIES] = { NULL };
 unsigned int latestBaseIndex = 0;
 
-// Create servo instances using the Servo class
-Servo venusLeft;
-Servo venusRight;
-Servo servoUltra;
-Servo servoGrabber;
 
-// Pin constants
-const int leftservo = 12;
-const int rightservo = 13;
-const int ultraservo = 11;
-const int grabberservo = 10;
-const int leftencoder = 7;
-const int rightencoder = 8;
 
 // ----------------------------------------------------------
 // ADDITIONAL INCLUDES
 // ----------------------------------------------------------
-#include "Motioncontrol.h"
 
 
 // ----------------------------------------------------------
@@ -101,9 +88,6 @@ position toCartesian(path toCoordinate);
 // ----------------------------------------------------------
 // PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
 // ----------------------------------------------------------
-void drive(unsigned int distance, int angle);
-bool labLightVisible();
-unsigned int usTop(int angle);
 
 
 // ----------------------------------------------------------
@@ -115,14 +99,9 @@ void setup()
 {
 	// Initiate serial communications
 	Serial.begin(9600);
-
-	// Attach servo's
-	venusLeft.attach(leftservo,1300,1700);
-    venusRight.attach(rightservo,1300,1700);
-    servoUltra.attach(ultraservo,540,2400);
-    servoGrabber.attach(grabberservo,540,2400);
-    pinMode(leftencoder, INPUT);
 	
+	startSetup();
+	stop();
 }
 
 // Main program loop
@@ -155,6 +134,9 @@ void loop()
 	else
 		++loopCounter;
 	*/
+
+	initiateDrive();
+	
 }
 
 // Start from lab
@@ -163,8 +145,8 @@ void initiateDrive()
 	path newPath;
 
 	// We're standing on the lab, not knowing in which direction
-	if (labLightVisible() == true)
-		drive(0, 180);
+	//if (labLightVisible() == true)
+	//	drive(0, 180);
 	
 	// Gain information using the top US-sensor
 	scanSurroundings();
@@ -178,9 +160,10 @@ void initiateDrive()
 
 	// Add path to array
 	setPath(newPath);
-
+	Serial.println(newPath.distance);
+	Serial.println(newPath.angle);
 	// Drive to it
-	drive(newPath.distance, newPath.angle);
+	drive(newPath.distance*10, newPath.angle);
 }
 
 // Add a new path to the array for later reference
@@ -214,7 +197,7 @@ void reversePath()
 	// Look in the direction of the base (assumption)
 	drive(0, -1*paths[0].angle); 
 
-	// search base with light sensor (verify assumption)
+	/*// search base with light sensor (verify assumption)
 	if(labLightVisible() == true)
 	{
 		drive(paths[0].distance, 0);
@@ -222,7 +205,7 @@ void reversePath()
 	else {
 		// do something to find the lab back
 	}
-
+	*/
 	
 	
 }
@@ -245,8 +228,9 @@ void scanSurroundings()
 	for (int i = 0; i < SAMPLES; ++i)
 	{
 		usData[i].angle = angle;
-		//usData[i].distance = usTop(angle);
-		usData[i].distance = random(0, 300);	// remove this line when there is an actual input
+		usData[i].distance = readUltraTop(angle + 90);
+		delay(1000);
+		//usData[i].distance = random(0, 300);	// remove this line when there is an actual input
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
 	}
@@ -395,7 +379,7 @@ path shortestPath(unsigned int from, unsigned int to)
 
 	return newPath;
 }
-
+/*
 // Convert waypoint to coordinates
 position toCartesian(path pCoordinate)
 {
@@ -408,4 +392,4 @@ position toCartesian(path pCoordinate)
 	cPosition.y = distance*sin(angle * PI / 180);
 
 	return cPosition;
-}
+}*/

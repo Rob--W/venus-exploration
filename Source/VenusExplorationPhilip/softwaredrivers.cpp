@@ -26,6 +26,14 @@ void startSetup(){
 	pinMode(rightencoder, INPUT);
 }
 
+int readIRLB(){		//Reads IR Left Bottom. Return unit to be determined
+
+}
+
+int readIRRB(){		//Reads IR Right Bottom. Return unit to be determined
+
+}
+
 void stop(){	//Stop function, makes the robot stop driving (if the servo's are properly set)
 	venusLeft.write(90);
 	venusRight.write(90);
@@ -47,7 +55,10 @@ void servoDrive(int left, int right, int n){
 			prevpulse = pulse;
 			countpulse += 1;
 		}
-		//hole sensing code has to be added
+		if ((readIRLB() || readIRRB) < 400){//hole sensing code has to be added
+			stop();
+			break; //Some kind of notification has to be added that an emergency brake has been executed.
+		}
 	}
 	stop();
 }
@@ -56,30 +67,21 @@ void drive(int distance, int angle){ //drive function with integer parameters di
 	//turn part
 	angle = angle % 360; //2*pirad*k=2*pirad*(k+1)
 	if (angle < 180){	//turn right
-		int turnn = (((angle * 10,5/*base length = 10.5 cm*/ / 360) * 10) / 1317); //Number of pulses needed to drive distance
+		int turnn = (angle *(10 / 1437)); //Number of pulses needed to turn
 		servoDrive(180, 180, turnn);
 	}
 	else{	//turn left
-		int turnn = ((((angle - 180) * 105/*base length*/ / 360) * 10) / 1317); //Number of pulses needed to drive distance
+		int turnn = ((angle - 180) *(10 / 1437)); //Number of pulses needed to turn
 		servoDrive(0, 0, turnn);
 	}
 	//forward movement part
-	int n = ((distance * 100) / 1317); //Number of pulses needed to drive distance. Distance in mm
+	int n = ((distance)*(10 / 1437)); //Number of pulses needed to drive distance. Distance in mm
 	servoDrive(180, 0, n);
 }
 
-
 void reverse(int distance){	//Makes the robot drive backwards a certain distance
-	int n = ((distance * 100) / 1317); //Number of pulses needed to drive distance
+	int n = ((distance)*(10 / 1437)); //Number of pulses needed to drive distance
 	servoDrive(0, 180, n);
-}
-
-int readIRLB(){		//Reads IR Left Bottom. Return unit to be determined
-
-}
-
-int readIRRB(){		//Reads IR Right Bottom. Return unit to be determined
-
 }
 
 int readIRMid(){	//reads Middle IR. Return unit to be determined

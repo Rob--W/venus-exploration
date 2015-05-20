@@ -49,14 +49,16 @@ void servoDrive(int left, int right, int n){
 	venusLeft.write(left);
 	venusRight.write(right);
 
-	while (n<countpulse){
+	while (n>countpulse){
 		pulse = digitalRead(rightencoder);
 		if (pulse != prevpulse){
 			prevpulse = pulse;
 			countpulse += 1;
 		}
-		if ((readIRLB() || readIRRB) < 400){//hole sensing code has to be added
-			stop();
+		//400 is arbitrary between  0 and 1024. This has to be tested. 
+		//The value is somewhere in between 0 and 2^8 because of a change in light and dark reception of the sensor.
+		//it will never be completly dark, that is why the value will never be zero.
+		if (readIRLB() < 400 || readIRRB() < 400){//hole sensing code has to be added
 			break; //Some kind of notification has to be added that an emergency brake has been executed.
 		}
 	}

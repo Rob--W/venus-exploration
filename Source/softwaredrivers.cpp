@@ -80,12 +80,16 @@ void drive(int distance, int angle){ //drive function with integer parameters di
 	//turn part
 	angle = angle % 360; //2*pirad*k=2*pirad*(k+1)
 	if (angle < 180){	//turn right
-		int turnn = ((angle *100) / 1437); //Number of pulses needed to turn
-		servoDrive(100, 100, turnn);
+		/*int turnn = ((angle *100) / 1437); //Number of pulses needed to turn. turns with both wheels
+		servoDrive(100, 100, turnn);*/
+		int turnn = ((angle * 200) / 1437); //turns with just one wheel
+		servoDrive(90, 110, turnn);
 	}
 	else{	//turn left
-		int turnn = (((angle - 180) *100) / 1437); //Number of pulses needed to turn
-		servoDrive(80, 80, turnn);
+		//int turnn = (((angle - 180) *100) / 1437); //Number of pulses needed to turn. turns with both wheels
+		//servoDrive(80, 80, turnn);
+		int turnn = (((360-angle) * 200) / 1437); //turns with just one wheel
+		servoDrive(90, 70, turnn);
 	}
 	//forward movement part
 	int n = ((distance*100) / 1317); //Number of pulses needed to drive distance. Distance in mm
@@ -141,13 +145,13 @@ int readUltraTop(int angle){		//Reads Top Ultrasonic sensor. Return unit is a di
 
 	// convert the time into a distance
 	cm = microsecondsToCentimeters(duration);
-
+	/*
 	Serial.print(inches);
 	Serial.print("in, ");
 	Serial.print(cm);
 	Serial.print("cm");
 	Serial.println();
-
+	*/
 	delay(100);
 	return cm;
 }

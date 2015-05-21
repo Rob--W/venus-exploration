@@ -83,12 +83,18 @@ void drive(int distance, int angle){ //drive function with integer parameters di
 		/*int turnn = ((angle *100) / 1437); //Number of pulses needed to turn. turns with both wheels
 		servoDrive(100, 100, turnn);*/
 		int turnn = ((angle * 200) / 1437); //turns with just one wheel
+		if ((((angle * 2000) / 1437) % 10) > 5){//rounds to the nearest ten to increase accuracy. this way for x.7 n will be x+1 instead of x
+			turnn++;
+		}
 		servoDrive(90, 110, turnn);
 	}
 	else{	//turn left
 		//int turnn = (((angle - 180) *100) / 1437); //Number of pulses needed to turn. turns with both wheels
 		//servoDrive(80, 80, turnn);
 		int turnn = (((360-angle) * 200) / 1437); //turns with just one wheel
+		if (((((360-angle) * 2000) / 1437) % 10) > 5){//rounds to the nearest ten to increase accuracy. this way for x.7 n will be x+1 instead of x
+			turnn++;
+		}
 		servoDrive(90, 70, turnn);
 	}
 	//forward movement part

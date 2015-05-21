@@ -10,6 +10,9 @@ void FForward();
 void FBack();
 void PRight();
 void PLeft();
+unsigned int DraaiCounter();
+unsigned int Delay();
+unsigned int Waarde();
 // the setup function runs once when you press reset or power the board
 void setup() {
 
@@ -23,14 +26,20 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-	FForward();
-	delay(1000);
-	PRight();
-	//delay(1000);
-	FBack();
-	delay(1000);
-	PLeft();
-	//delay(1000);
+	if ((15 - DraaiCounter()) < 8){				//left angle
+		Waarde() = DraaiCounter() - 8;			//oke marijn wat welke kennis mis ik?
+		Waarde() * (600 / 8) = Delay();
+		PLeft();
+	}
+	else if (DraaiCounter() = 8){				//straight forward
+		FForward();
+	}
+	else{										//right angle
+		Waarde() = 8 - DraaiCounter();
+		Waarde() * (600 / 8) = Delay();
+		PRight();
+
+	}
 
 }
 
@@ -45,24 +54,18 @@ void FForward(){
 void PLeft(){
 	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
 	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-	delay(600);                                // ...for 0.6 seconds
+	delay(Delay());                                // ...for 0.6 seconds (er stond 600)
 }
 
 // Turn right in place
 void PRight(){
 	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
 	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
-	delay(600);                                // ...for 0.6 seconds
+	delay(Delay());                                // ...for 0.6 seconds ( er stond 600)
 }
 // Full speed backward
 void FBack(){
 	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
 	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
 	delay(2000);                               // ...for 2 seconds
-}
-
-void PLeftTest(){
-	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
-	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-	delay(600);                                // ...for 0.6 seconds
 }

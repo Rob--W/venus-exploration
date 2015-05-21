@@ -12,18 +12,14 @@
 // the setup function runs once when you press reset or power the board
 void setup() {
 	startSetup();
-
+	Serial.begin(9600);
 }
 
 
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-	stop();
-	openGrabber();
-	delay(2000);
-	closeGrabber();
-	delay(2000);
-	//drive(0, 0);
-
+	int turnn = ((90 * 200) / 1437); //Number of pulses needed to turn
+	servoDrive(90, 110, turnn);
+	delay(5000);
 }

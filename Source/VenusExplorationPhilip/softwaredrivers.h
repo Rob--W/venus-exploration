@@ -1,6 +1,7 @@
 #pragma once
 
-void startSetup(); //Content needed for the pin initialisation in function setup()
+//Content needed for the pin initialisation in function setup()
+void startSetup(); 
 
 void turn();
 
@@ -16,9 +17,11 @@ void stop();	//Stop function, makes the robot stop driving (if the servo's are p
 //n: value bigger than 0 that defines the number of pulses recieved from the digital encoder. (distance)
 void servoDrive(int left, int right, int n);	//servo control for the repetitive part of the drive functions.
 
-//distance
+//distance: Drives forward, distance in mm
+//angle: turns shortest way, angle in degrees
 void drive(int distance, int angle);//drive function with integer parameters distance and angle in degrees
 
+//distance: Drives backward, distance in mm
 void reverse(int distance);	//Makes the robot drive backwards a certain distance
 
 int readIRMid();	//reads Middle IR. Return unit to be determined
@@ -27,6 +30,7 @@ int readIRGrab();		//Reads IR Grabber. Return unit to be determined
 
 int readLightSense();	//Reads Light Sensor. Return unit to be determined
 
+//angle: angle to which to turn the ultrasonic servo to
 int readUltraTop(int angle);		//Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
 
 int readUltraBot(); //Reads bottom Ultrasonic sensor. Return unit is a distance.

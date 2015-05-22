@@ -531,3 +531,13 @@ bool IRG(){
 		IRG();							//drive further
 	}
 }
+
+void One(){
+	if (readUltraTop(USSERVO_OFFSET) < SAFE_DISTANCE){
+		stop();
+		delay(1000);
+		drive(5, 90);
+	}
+
+
+}

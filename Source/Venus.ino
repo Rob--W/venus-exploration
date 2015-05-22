@@ -197,20 +197,12 @@ void reversePath()
 		Serial.print(" - ");
 		Serial.println(paths[i].distance);
 	}
-	// omdraaien
 	delay(2000);
 	// Revert path, i to 0 to stop at the point before the base
-	/*for (int i = currentPathID; i > 0; --i)
-	{
-		if (paths[i].distance <= 0 && paths[i].angle == 0)
-			--i;
-		drive(paths[i].distance, -1*paths[i].angle);
-		delay(1000);
-	}*/
-	Serial.println(currentPathID);
-	for (int i = currentPathID - 1; i < 0; --i)
+	for (int i = currentPathID; i < 0; --i)
 	{
 		if (i == currentPathID) {
+			// Turn around and drive the set distance
 			drive(paths[i].distance, 180);
 			delay(1000);
 		}
@@ -223,26 +215,14 @@ void reversePath()
 	}
 
 	// Look in the direction of the base (assumption)
-	//drive(0, -1*paths[0].angle); 
 	delay(1000);
-
-	/*// search base with light sensor (verify assumption)
-	if(labLightVisible() == true)
-	{
-		drive(paths[0].distance, 0);
-	} 
-	else {
-		// do something to find the lab back
-	}
-	*/
-	
-	
 }
 
 // Compute desired angles for the top US-sensor and store the measured data so that it can be used by other functions
 void scanSurroundings()
-{
-	
+{	
+	readUltraTop(0);
+	delay(100);
 	// Calculate the desired angles based on the number of samples
 	int angleStep = 0;
 	int angle = -90;
@@ -273,7 +253,7 @@ void scanSurroundings()
 
 		usData[i].distance = distance*10;
 
-		delay(100);
+		delay(0);
 		//usData[i].distance = random(0, 300);	// remove this line when there is an actual input
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
@@ -311,7 +291,6 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 				minID = i;
 			}
 		}
-
 	}
 
 	// Return the array ID of the wanted value.
@@ -371,7 +350,6 @@ path shortestPath(unsigned int from, unsigned int to)
 		to = from;
 		from = temp;
 		reversePath = true;
-		
 	}
 
 	// Then calculate the distance between the array indices

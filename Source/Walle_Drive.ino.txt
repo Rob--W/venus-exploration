@@ -15,13 +15,8 @@ unsigned int Delay;
 unsigned int Waarde = 0;
 // the setup function runs once when you press reset or power the board
 void setup() {
-
-
-		servoLeft.attach(12);                      // Attach left signal to pin 13
-		servoRight.attach(13);                     // Attach right signal to pin 12
-
-		
-
+	servoLeft.attach(12);                      // Attach left signal to pin 13
+	servoRight.attach(13);                     // Attach right signal to pin 12
 }
 
 // the loop function runs over and over again until power down or reset

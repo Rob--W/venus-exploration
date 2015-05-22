@@ -73,11 +73,13 @@ void servoDrive(int left, int right, int n)
 	//////////////////////////////////////////////////////////////////////////
 	while (n>countpulse)
 	{
+		// Function executed every time to check for obstacles
+		checkObstacles();
+
 		pulse = digitalRead(rightencoder);
 		if (pulse != prevpulse){
 			prevpulse = pulse;
 			countpulse += 1;
-			checkObstacles();
 		}
 		//400 is arbitrary between  0 and 1024. This has to be tested. 
 		//The value is somewhere in between 0 and 2^8 because of a change in light and dark reception of the sensor.

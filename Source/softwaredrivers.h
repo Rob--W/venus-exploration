@@ -1,6 +1,6 @@
 #pragma once
 
-void checkObstacles();
+bool checkObstacles();
 
 void startSetup(); //Content needed for the pin initialisation in function setup()
 

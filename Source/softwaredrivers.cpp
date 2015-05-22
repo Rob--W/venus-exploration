@@ -74,7 +74,8 @@ void servoDrive(int left, int right, int n)
 	while (n>countpulse)
 	{
 		// Function executed every time to check for obstacles
-		checkObstacles();
+		if (!checkObstacles())
+			break;
 
 		pulse = digitalRead(rightencoder);
 		if (pulse != prevpulse){

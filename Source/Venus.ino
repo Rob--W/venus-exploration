@@ -38,7 +38,6 @@
 #define PATH_ENTRIES	100				// Maximum number of allowed paths
 #define SAMPLES			19				// Number of samples to take for the top-US sensor
 #define PI				3.14159265359	// Obviously
-#define MIN_DISTANCE	12
 #define USSERVO_OFFSET	90				// Offset in the data for the top servo
 #define SAFE_DISTANCE	12				// 
 
@@ -88,6 +87,7 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min);
 int minValue(int arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
 position toCartesian(path toCoordinate);
+bool One();
 // ----------------------------------------------------------
 // PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
 // ----------------------------------------------------------
@@ -142,9 +142,13 @@ void loop()
 	initiateDrive();
 }
 
-void checkObstacles()
+bool checkObstacles()
 {
 	//USU();
+	if (!One())
+		return false;
+
+	return true;
 }
 
 // Start from lab
@@ -160,7 +164,7 @@ void initiateDrive()
 	if (loopCounter > 3)
 		reversePath();
 
-	scanSurroundings();
+		scanSurroundings();
 	// Get the interesting information from the acquired data
 	unsigned int minID = minValue(usData, SAMPLES, true);
 
@@ -532,12 +536,14 @@ bool IRG(){
 	}
 }
 
-void One(){
+bool One(){
 	if (readUltraTop(USSERVO_OFFSET) < SAFE_DISTANCE){
+		Serial.println("Stop");
 		stop();
 		delay(1000);
 		drive(5, 90);
+		return false;
 	}
 
-
+	return true;
 }

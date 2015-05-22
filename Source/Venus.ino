@@ -161,8 +161,10 @@ void initiateDrive()
 	//	drive(0, 180);
 	
 	// Gain information using the top US-sensor
-	if (loopCounter > 3)
+	if (loopCounter > 3) {
 		reversePath();
+		while (true){}
+	}
 
 		scanSurroundings();
 	// Get the interesting information from the acquired data
@@ -202,17 +204,20 @@ bool setPath(path newPath)
 // NOT TESTED AT ALL
 void reversePath()
 {
+	Serial.println("Returning to base: ");
 	for (int i = 0; i < currentPathID; ++i)
 	{
+		Serial.print(i);
+		Serial.print(" - ");
 		Serial.print(paths[i].angle);
 		Serial.print(" - ");
 		Serial.println(paths[i].distance);
 	}
 	delay(2000);
 	// Revert path, i to 0 to stop at the point before the base
-	for (int i = currentPathID; i < 0; --i)
+	for (int i = currentPathID - 1; i >= 0; --i)
 	{
-		if (i == currentPathID) {
+		if (i == currentPathID - 1) {
 			// Turn around and drive the set distance
 			drive(paths[i].distance, 180);
 			delay(1000);
@@ -224,7 +229,7 @@ void reversePath()
 
 		delay(1000);
 	}
-
+	Serial.println("Done!");
 	// Look in the direction of the base (assumption)
 	delay(1000);
 }

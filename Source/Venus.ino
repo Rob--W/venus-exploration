@@ -144,7 +144,7 @@ void loop()
 
 void checkObstacles()
 {
-	USU();
+	//USU();
 }
 
 // Start from lab

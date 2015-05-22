@@ -89,6 +89,7 @@
     <ClInclude Include="Visual Micro\.Source.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="softwaredriver.2.cpp.txt" />
     <ClCompile Include="softwaredrivers.cpp" />
   </ItemGroup>
   <ItemGroup>

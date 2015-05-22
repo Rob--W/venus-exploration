@@ -91,6 +91,7 @@ void servoDrive(int left, int right, int n)
 
 void drive(int distance, int angle)  //drive function with integer parameters distance and angle in degrees
 {
+	distance = 10 * distance;
 	//turn part
 	/*angle = angle % 360;*/ //2*pirad*k=2*pirad*(k+1)
 	if (angle > 0)  //turn left

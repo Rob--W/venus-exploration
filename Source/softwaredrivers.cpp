@@ -77,6 +77,7 @@ void servoDrive(int left, int right, int n)
 		if (pulse != prevpulse){
 			prevpulse = pulse;
 			countpulse += 1;
+			checkObstacles();
 		}
 		//400 is arbitrary between  0 and 1024. This has to be tested. 
 		//The value is somewhere in between 0 and 2^8 because of a change in light and dark reception of the sensor.
@@ -96,14 +97,14 @@ void drive(int distance, int angle)  //drive function with integer parameters di
 	/*angle = angle % 360;*/ //2*pirad*k=2*pirad*(k+1)
 	if (angle > 0)  //turn left
 	{	
-		int turnn = (((angle)* 100) / 1437); //Number of pulses needed to turn. turns with both wheels
+		int turnn = round(((angle)* 100.0) / 1437.0); //Number of pulses needed to turn. turns with both wheels
 		servoDrive(100, 100, turnn);
 		//int turnn = ((angle * 200) / 1437); //turns with just one wheel
 		//servoDrive(90, 110, turnn);
 	}
 	else   //turn right
 	{	
-		int turnn = (((angle) *100) / 1437); //Number of pulses needed to turn. turns with both wheels
+		int turnn = round(((angle) *100.0) / 1437.0); //Number of pulses needed to turn. turns with both wheels
 		servoDrive(80, 80, turnn);
 		//int turnn = (((360-angle) * 200) / 1437); //turns with just one wheel
 		//servoDrive(90, 70, turnn);

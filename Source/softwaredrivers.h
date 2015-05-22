@@ -1,5 +1,7 @@
 #pragma once
 
+void checkObstacles();
+
 void startSetup(); //Content needed for the pin initialisation in function setup()
 
 void turn();

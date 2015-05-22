@@ -40,6 +40,7 @@
 #define PI				3.14159265359	// Obviously
 #define MIN_DISTANCE	12
 #define USSERVO_OFFSET	90				// Offset in the data for the top servo
+#define SAFE_DISTANCE	12				// 
 
 // Path struct holds basic information about driven paths
 struct path
@@ -139,6 +140,11 @@ void loop()
 	*/
 
 	initiateDrive();
+}
+
+void checkObstacles()
+{
+	USU();
 }
 
 // Start from lab
@@ -241,18 +247,18 @@ void scanSurroundings()
 		int distance = readUltraTop(angle + 90);
 
 
-		if (distance < MIN_DISTANCE) {
+		if (distance < SAFE_DISTANCE) {
 			distance = 500; // set distance out of the scope
 		}
 		else {
-			distance -= MIN_DISTANCE;
+			distance -= SAFE_DISTANCE;
 		}
 		Serial.print("a: ");
 		Serial.print(angle);
 		Serial.print(" - d: ");
 		Serial.println(distance);
 
-		usData[i].distance = distance*10;
+		usData[i].distance = distance;
 
 		delay(0);
 		//usData[i].distance = random(0, 300);	// remove this line when there is an actual input
@@ -432,7 +438,7 @@ void USU(){
 			USU();
 		}
 	}
-	else if (readUltraTop(USSERVO_OFFSET) > 40 && readUltraTop(USSERVO_OFFSET) < 280){
+	else if (readUltraTop(USSERVO_OFFSET) > 400 && readUltraTop(USSERVO_OFFSET) < 280){
 		if (abs(readUltraBot() - readUltraTop(USSERVO_OFFSET)) < 10){
 			drive(readUltraTop(USSERVO_OFFSET), 0);						//we are going on an adventure
 		}
@@ -444,14 +450,14 @@ void USU(){
 		}
 	}
 	else{
-		if (abs(readUltraBot() - readUltraTop(USSERVO_OFFSET)) > 10){ //we are standing in front of a rock....
+		if (abs(readUltraBot() - readUltraTop(USSERVO_OFFSET)) > SAFE_DISTANCE){ //we are standing in front of a rock....
 			stop();
 			drive(10, 90);									//rotate 10 cm to the right
 			USU();											//repeat le process
 		}
 		else{
 			stop();
-			IRM();										//start stone scan procedure
+			//IRM();										//start stone scan procedure
 		}
 	}
 }

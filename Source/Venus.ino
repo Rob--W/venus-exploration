@@ -157,7 +157,7 @@ void initiateDrive()
 	//	drive(0, 180);
 	
 	// Gain information using the top US-sensor
-	if (loopCounter > 1)
+	if (loopCounter > 3)
 		reversePath();
 
 	scanSurroundings();

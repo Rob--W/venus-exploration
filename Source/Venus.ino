@@ -39,14 +39,15 @@
 #define SAMPLES			19				// Number of samples to take for the top-US sensor
 #define PI				3.14159265359	// Obviously
 #define MIN_DISTANCE	12
+#define USSERVO_OFFSET	90				// Offset in the data for the top servo
 
 // Path struct holds basic information about driven paths
 struct path
 {
 	// unsigned to prevent negative numbers
-	unsigned int distance;
+	long distance;
 	// int due SRAM limitations, otherwise consuming 32*PATH_ENTRIES bytes
-	int angle;
+	long angle;
 };
 
 struct position
@@ -417,3 +418,110 @@ position toCartesian(path pCoordinate)
 
 	return cPosition;
 }*/
+
+/*UltrasoonUP*/
+void USU(){
+	if (readUltraTop(USSERVO_OFFSET) > 280){
+		if (readUltraBot() < 280){							//we might have found a stone
+			drive(readUltraBot(), 0);							// go for it wall-e
+			stop();
+			USU();											//make a re-check, calibration
+		}
+		else{												//nothing found yet
+			drive(25, 0);									//we drive a little further and try it again
+			USU();
+		}
+	}
+	else if (readUltraTop(USSERVO_OFFSET) > 40 && readUltraTop(USSERVO_OFFSET) < 280){
+		if (abs(readUltraBot() - readUltraTop(USSERVO_OFFSET)) < 10){
+			drive(readUltraTop(USSERVO_OFFSET), 0);						//we are going on an adventure
+		}
+		else if ((readUltraBot() - readUltraTop(USSERVO_OFFSET)) > 10){ //There is an object closer to Top than Bot so let's explore it
+			drive(readUltraTop(USSERVO_OFFSET), 0);
+		}
+		else{											//maybe a possible stone 0.o
+			drive(readUltraBot(), 0);
+		}
+	}
+	else{
+		if (abs(readUltraBot() - readUltraTop(USSERVO_OFFSET)) > 10){ //we are standing in front of a rock....
+			stop();
+			drive(10, 90);									//rotate 10 cm to the right
+			USU();											//repeat le process
+		}
+		else{
+			stop();
+			IRM();										//start stone scan procedure
+		}
+	}
+}
+/*UltrasoonDown*/
+void USD(){
+	if (readUltraBot() < 15){
+		drive(5, 0);			//rijd er nog iets dichter naartoe
+		IRM();
+	}//re-scan
+	else{
+		USU();					//false alarm, retry
+	}
+}
+
+/*IRUnder*/
+void IRU(){
+	int counter = 0;
+	if (readIRLB() || readIRRB() < 15){
+		stop();												//car stops, because end of the world or a cliff
+		if (readUltraTop > 0){
+			drive(readUltraTop(USSERVO_OFFSET), 0);
+		}
+		else{												//no new point found
+			drive(5, 90);									//drive 5cm to the right
+			drive(0, -90);									//drive back to the left
+			drive(/*shortestpath functie*/0, 0);
+		}
+		if (readIRLB() || readIRRB() > 100 && readIRLB() || readIRRB() < 240){
+			if (counter > 0){								//count grey stripes
+				openGrabber();								//drop the stone
+				counter = 0;
+				reverse(25);
+			}
+			else{											//i can count grey stripes
+				++counter;
+			}
+		}
+		else{
+			counter = 0;
+		}
+	}
+}
+/*IRMmid*/
+bool IRM(){
+	if (readIRMid() == 1){
+		drive(5, 0);
+		stop();
+		openGrabber();					//get the stone
+		closeGrabber();					//we got the stone
+		reversePath();					//get the stone home wall-e
+	}
+	else{
+		stop();							//stop
+		//USD();							//so what did i see
+	}
+}
+
+/*IRGrabber*/
+bool IRG(){
+	if (readIRGrab() == 0){				//We found a wall of the lab, but not the ramp
+		stop();
+		drive(5, 90);					// 5 cm to the right
+		stop();
+		drive(0, -90);					//back to the begin position
+		IRG();							//retry if we found the
+	}
+	else{								//we found the ramp, go for it wall-e
+		drive(5, 0);					//straight to the the goal	
+		IRU();							//scan the ground for the grey stripes
+		stop();							//stop
+		IRG();							//drive further
+	}
+}

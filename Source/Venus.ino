@@ -11,16 +11,16 @@
 // NOTE
 // Everything which has been given in degrees, uses a rotated polar system as reference:
 //
-//								  0
-//							
-//								o ^ o 
-//							 o    |    o  
-//						+90	o     |     o -90
-//							o     |     o 
-//							 o    |    o 
-//							    o   o
-//							
-//								+/-180
+//                                0
+//
+//                              o ^ o 
+//                           o    |    o  
+//                      +90 o     |     o -90
+//                          o     |     o 
+//                           o    |    o 
+//                              o   o
+//
+//                              +/-180
 //
 // It is not efficient to turn more than 180 degrees
 

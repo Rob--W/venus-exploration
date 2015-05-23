@@ -39,15 +39,15 @@
 #define SAMPLES			19				// Number of samples to take for the top-US sensor
 #define PI				3.14159265359	// Obviously
 #define USSERVO_OFFSET	90				// Offset in the data for the top servo
-#define SAFE_DISTANCE	12				// 
+#define SAFE_DISTANCE	12				// Offset distance due placement of top/bottom US sensor (stopping distance)
 
 // Path struct holds basic information about driven paths
 struct path
 {
 	// unsigned to prevent negative numbers
-	long distance;
+	unsigned int distance;
 	// int due SRAM limitations, otherwise consuming 32*PATH_ENTRIES bytes
-	long angle;
+	int angle;
 };
 
 struct position
@@ -61,6 +61,9 @@ unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
 path usData[SAMPLES] = { NULL };
 
+// Crash handling variable
+bool crashed = false;
+
 // only for debugging purposes
 bool debugLoop = false;
 int loopCounter = 0;
@@ -70,17 +73,12 @@ path paths[PATH_ENTRIES] = { NULL };
 unsigned int latestBaseIndex = 0;
 
 
-
-// ----------------------------------------------------------
-// ADDITIONAL INCLUDES
-// ----------------------------------------------------------
-
-
 // ----------------------------------------------------------
 // PROTOTYPES
 // ----------------------------------------------------------
 void initiateDrive();
 bool setPath(path newPath);
+bool removePath(unsigned int pathID);
 void reversePath();
 void scanSurroundings();
 int minValue(path arrayData[], unsigned int arrayLength, bool min);
@@ -88,10 +86,6 @@ int minValue(int arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
 position toCartesian(path toCoordinate);
 bool One();
-// ----------------------------------------------------------
-// PLACEHOLDER FUNCTIONS (to be replaced/filled in later on)
-// ----------------------------------------------------------
-
 
 // ----------------------------------------------------------
 // FUNCTIONS
@@ -111,44 +105,20 @@ void setup()
 // Main program loop
 void loop()
 {
-	// Uncomment only when you want to test the path thingy
-	/*
-	initiateDrive();
-
-	while (debugLoop){};
-
-	if (loopCounter > 5)
-	{
-		debugLoop = true;
-		Serial.println("Paths array");
-		for (int i = 0; i < 6; ++i)
-		{
-			Serial.print(paths[i].angle);
-			Serial.print(" - ");
-			Serial.println(paths[i].distance);
-		}
-		Serial.println("-------");
-
-		path shortest = shortestPath(4, 2);
-
-		Serial.print(shortest.angle);
-		Serial.print(" - ");
-		Serial.println(shortest.distance);
-	}
-	else
-		++loopCounter;
-	*/
-
+	// Start the strategy
 	initiateDrive();
 }
 
+// Routine for the obstacle functions and things that needs to be handled
+// during the driving procedure
 bool checkObstacles()
 {
-	//USU();
+	// Simple (placeholder) collission detection
 	if (!One())
-		return false;
+		crashed = true;				// Collission detected!
 
-	return true;
+	// Return true when everything is ok
+	return crashed;
 }
 
 // Start from lab
@@ -166,8 +136,11 @@ void initiateDrive()
 		while (true){}
 	}
 
-		scanSurroundings();
+	// Start scanning with top US-sensor
+	scanSurroundings();
+
 	// Get the interesting information from the acquired data
+	// (set the last parameter to false to gain the max value)
 	unsigned int minID = minValue(usData, SAMPLES, true);
 
 	// Set a new path to the closest detected object 
@@ -179,8 +152,25 @@ void initiateDrive()
 	setPath(newPath);
 	Serial.println(newPath.distance);
 	Serial.println(newPath.angle);
+
 	// Drive to it
 	drive(newPath.distance, newPath.angle*-1);
+	
+	// Check whether the task completed successfully
+	if (crashed)
+	{
+		// Remove the planned direction
+		removePath(currentPathID - 1);
+
+		// Add the quarter turn to the database
+		newPath.angle = 90;
+		newPath.distance = 0;
+		setPath(newPath);
+
+		// Crash resolved, setting back the handler
+		crashed = false;
+	}
+
 	++loopCounter;
 }
 
@@ -195,15 +185,58 @@ bool setPath(path newPath)
 	paths[currentPathID].distance = newPath.distance;
 	paths[currentPathID].angle = newPath.angle;
 
+	// Raise the array counter
 	currentPathID += 1;
 
 	return true;
 }
 
+// Removes indexed path from the array, and resolving empty slots if necessary
+bool removePath(unsigned int pathID)
+{
+	if (pathID = currentPathID - 1)
+	{
+		// We want to remove the last item in the list
+		--currentPathID;
+		paths[currentPathID].distance = 0;
+		paths[currentPathID].angle = 0;
+	}
+	else {
+		// We want to delete a path somewhere in between
+		// The array must then be corrected to avoid errors
+
+		// Safety check if there is an overflow going to occur
+		if (currentPathID >= PATH_ENTRIES)
+			return false;
+
+		// Empty the indexed slot
+		paths[pathID].distance = 0;
+		paths[pathID].angle = 0;
+
+		path temp;
+
+		// Everything is safe, start swapping from the removed item to the last added item
+		for (int i = 0; i < currentPathID - pathID; ++i)
+		{
+			// pathID has just been emptied, so lets start right there
+			// swappedy swap!
+			temp = paths[i + pathID];
+			paths[i + pathID] = paths[i + pathID + 1];
+			paths[i + pathID + 1] = temp;
+		}
+		
+		// And substract one from the arraycounter for the next addition
+		--currentPathID;
+	}
+
+	// Everything went as planned
+	return true;
+}
+
 // Return to the lab by reversing the path array
-// NOT TESTED AT ALL
 void reversePath()
 {
+	// Some serial checkings...
 	Serial.println("Returning to base: ");
 	for (int i = 0; i < currentPathID; ++i)
 	{
@@ -213,13 +246,17 @@ void reversePath()
 		Serial.print(" - ");
 		Serial.println(paths[i].distance);
 	}
+
 	delay(2000);
+
 	// Revert path, i to 0 to stop at the point before the base
 	for (int i = currentPathID - 1; i >= 0; --i)
 	{
 		if (i == currentPathID - 1) {
 			// Turn around and drive the set distance
 			drive(paths[i].distance, 180);
+
+			// Give it time to turn around
 			delay(1000);
 		}
 		else if (i == 0)
@@ -230,15 +267,19 @@ void reversePath()
 		delay(1000);
 	}
 	Serial.println("Done!");
-	// Look in the direction of the base (assumption)
+
 	delay(1000);
 }
 
 // Compute desired angles for the top US-sensor and store the measured data so that it can be used by other functions
 void scanSurroundings()
 {	
-	readUltraTop(0);
+	// Set the sensor to the right
+	readUltraTop(-90 + USSERVO_OFFSET);
+
+	// Give enough time to turn before continuing
 	delay(100);
+
 	// Calculate the desired angles based on the number of samples
 	int angleStep = 0;
 	int angle = -90;
@@ -255,13 +296,15 @@ void scanSurroundings()
 		usData[i].angle = angle;
 		int distance = readUltraTop(angle + 90);
 
-
+		// Make objects which are too close uninteresting by setting the distance to max
 		if (distance < SAFE_DISTANCE) {
 			distance = 500; // set distance out of the scope
 		}
 		else {
+			// Substract the collision distance to prevent riding into objects
 			distance -= SAFE_DISTANCE;
 		}
+
 		Serial.print("a: ");
 		Serial.print(angle);
 		Serial.print(" - d: ");
@@ -269,20 +312,24 @@ void scanSurroundings()
 
 		usData[i].distance = distance;
 
-		delay(0);
 		//usData[i].distance = random(0, 300);	// remove this line when there is an actual input
+
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
 	}
-
-	readUltraTop(90); // look straight ahead
-
+	
+	// look straight ahead
+	readUltraTop(90); 
 }
 
 // Determine the lowest (or highest, set min to false) distance value of a path array (returns the array index)
+// Including input filter which determines the center value of multiple equal minimums
 int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 {
 	path temp = arrayData[0];
+	int repetition = 0;
+	int startRepetition = 0;
+	int marge = 5;
 	int minID = 0;
 
 	// Run through the entire array
@@ -307,6 +354,34 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 				minID = i;
 			}
 		}
+	}
+
+	// Run through the array again to gain the center lowest value within a certain range
+	// This avoids taking the latest lowest value when multiple values are equal
+	for (int i = 0; i < arrayLength; ++i)
+	{
+		temp = arrayData[minID];
+		if (arrayData[i].distance <= (float)temp.distance*((100 + marge) / 100))
+		{
+			// The measured value is approximately the same as the previous ones, so there is a bigger object
+			if (repetition == 0)
+				startRepetition = i;
+
+			++repetition;
+		}
+		else
+			repetition = 0;
+	}
+
+
+	if (repetition > 1)
+	{
+		// Gain the middle index value of the input series
+		minID = startRepetition + (repetition / 2);
+	}
+	else if (repetition == 1)
+	{
+		minID = startRepetition;
 	}
 
 	// Return the array ID of the wanted value.
@@ -419,6 +494,7 @@ path shortestPath(unsigned int from, unsigned int to)
 
 	return newPath;
 }
+
 /*
 // Convert waypoint to coordinates
 position toCartesian(path pCoordinate)
@@ -546,7 +622,8 @@ bool One(){
 		Serial.println("Stop");
 		stop();
 		delay(1000);
-		drive(5, 90);
+		drive(0, 90);
+		delay(1000);
 		return false;
 	}
 

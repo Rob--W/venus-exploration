@@ -79,11 +79,13 @@ unsigned int latestBaseIndex = 0;
 void initiateDrive();
 bool setPath(path newPath);
 bool removePath(unsigned int pathID);
+void changePath(unsigned int pathID, unsigned int distance, int angle);
 void reversePath();
 void scanSurroundings();
 int minValue(path arrayData[], unsigned int arrayLength, bool min);
 int minValue(int arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
+path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination);
 position toCartesian(path toCoordinate);
 bool One();
 
@@ -231,6 +233,18 @@ bool removePath(unsigned int pathID)
 
 	// Everything went as planned
 	return true;
+}
+
+// Change a path using the override distance or angle. Default set to 0
+// Can be used to change paths in case of a obstacle
+void changePath(unsigned int pathID, unsigned int distance = 0, int angle = 0)
+{
+	// Replace the data if it has been changed
+	if (distance > 0)
+		paths[pathID].distance = distance;
+
+	if (angle != 0)
+		paths[pathID].angle = angle;
 }
 
 // Return to the lab by reversing the path array
@@ -493,6 +507,60 @@ path shortestPath(unsigned int from, unsigned int to)
 	newPath.angle = finalAngle;
 
 	return newPath;
+}
+
+// In case a cliff or another obstacle occurs, the path needs to be restored
+// This calculates the offset caused by other movements to change the direction vector
+// to get to the earlier defined destination
+path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination)
+{
+	// First calculate the shortest path of the offset movements to simplify the calculations
+	path simplifiedDodge = shortestPath(startDodge, endDodge);
+	path temp;
+	// Then calculate the required changes in angle and distance to the destination using the simplified path
+	
+	// First determine the projections of the dodge move
+	int angle = 0;
+	int pathX, pathY;
+
+	if (simplifiedDodge.angle < 0)
+	{
+		angle = -90 - simplifiedDodge.angle;
+	}
+	else {
+		angle = 90 - simplifiedDodge.angle;
+	}
+
+	// Determine the cartesian projection
+	pathX = round(-simplifiedDodge.distance * cos(angle * PI / 180)); 
+	pathY = round(simplifiedDodge.distance * sin(angle * PI / 180));
+
+	// Assume we have the driven distance until the stop
+	// Then calculate the driven part of the route 
+	temp.distance = /*driven distance + */ pathY;
+
+	int remainingDistance = destination.distance - temp.distance;
+	// The angle of the new vector is determined by the x-offset
+	temp.angle = round(atan(pathX / remainingDistance) * (180 / PI));
+
+	// Then recalculate the distance to the endpoint
+	temp.distance = round(sqrt(pow(pathX, 2) + pow(remainingDistance, 2)));
+
+	// Clean up the array and add the newly calculated paths
+	for (int i = 0; i < (endDodge - startDodge); ++i)
+	{
+		// The removePath function resolves empty slots automatically, so we don't have to
+		// pass the index to the function.
+		removePath(startDodge);
+	}
+
+	// Set the newly calculated paths
+	setPath(simplifiedDodge);
+	setPath(temp);
+
+	// And return the new path, so that it can be used to drive to
+	return temp;
+
 }
 
 /*

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <Servo.h>
 #include "softwaredrivers.h"
+
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
 // REDUCING FILESIZES AND SRAM USAGE
@@ -85,8 +86,14 @@ void scanSurroundings();
 int minValue(path arrayData[], unsigned int arrayLength, bool min);
 int minValue(int arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
-path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination);
+path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination, unsigned int distanceDriven);
 position toCartesian(path toCoordinate);
+void IRU();
+bool IRM();
+bool IRG();
+void light();
+void USU();
+void USD();
 bool One();
 
 // ----------------------------------------------------------
@@ -512,7 +519,7 @@ path shortestPath(unsigned int from, unsigned int to)
 // In case a cliff or another obstacle occurs, the path needs to be restored
 // This calculates the offset caused by other movements to change the direction vector
 // to get to the earlier defined destination
-path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination)
+path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination, unsigned int distanceDriven)
 {
 	// First calculate the shortest path of the offset movements to simplify the calculations
 	path simplifiedDodge = shortestPath(startDodge, endDodge);
@@ -522,22 +529,22 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 	// First determine the projections of the dodge move
 	int angle = 0;
 	int pathX, pathY;
+	int invert = 1;
 
+	// Remember the angle sign
 	if (simplifiedDodge.angle < 0)
-	{
-		angle = -90 - simplifiedDodge.angle;
-	}
-	else {
-		angle = 90 - simplifiedDodge.angle;
-	}
+		invert = -1;
 
+	// We need the other part of the angle
+	angle = (invert * 90) - simplifiedDodge.angle;
+	
 	// Determine the cartesian projection
-	pathX = round(-simplifiedDodge.distance * cos(angle * PI / 180)); 
+	pathX = round(-1 * invert * simplifiedDodge.distance * cos(angle * PI / 180)); 
 	pathY = round(simplifiedDodge.distance * sin(angle * PI / 180));
 
 	// Assume we have the driven distance until the stop
 	// Then calculate the driven part of the route 
-	temp.distance = /*driven distance + */ pathY;
+	temp.distance = distanceDriven + pathY;
 
 	int remainingDistance = destination.distance - temp.distance;
 	// The angle of the new vector is determined by the x-offset
@@ -560,7 +567,6 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 
 	// And return the new path, so that it can be used to drive to
 	return temp;
-
 }
 
 /*

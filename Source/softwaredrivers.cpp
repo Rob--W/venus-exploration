@@ -3,8 +3,8 @@
 #include "softwaredrivers.h"
 
 
-Servo venusLeft;
-Servo venusRight;
+Servo servoLeft;
+Servo servoRight;
 Servo servoUltra;
 Servo servoGrabber;
 
@@ -13,122 +13,187 @@ const int rightservo = 13;
 const int ultraservo = 11;
 const int grabberservo = 10;
 
-
+unsigned int DraaiCounter;
+unsigned int Delay;
+unsigned int Duration;
 
 const int leftencoder = 7;
 const int rightencoder = 8;
 
 const int pingPin = 9;
 
-
-
-void startSetup()
+void startSetup() 
 {
-	venusLeft.attach(leftservo, 540, 2400);
-	venusRight.attach(rightservo, 540, 2400);
+	servoLeft.attach(leftservo);
+	servoRight.attach(rightservo);
 	servoUltra.attach(ultraservo, 540, 2400);
 	servoGrabber.attach(grabberservo, 540, 2400);
 
 	pinMode(leftencoder, INPUT);
 	pinMode(rightencoder, INPUT);
-}
-
-void turn()
-{
-	venusLeft.write(120);
-	venusRight.write(120);
-}
-
-int readIRLB() //Reads IR Left Bottom. Return unit to be determined
-{
 
 }
 
-int readIRRB() //Reads IR Right Bottom. Return unit to be determined
-{
+//
+//
+//void startsetup()
+//{
+//	venusleft.attach(leftservo, 540, 2400);
+//	venusright.attach(rightservo, 540, 2400);
+//	servoultra.attach(ultraservo, 540, 2400);
+//	servograbber.attach(grabberservo, 540, 2400);
+//
+//	pinmode(leftencoder, input);
+//	pinmode(rightencoder, input);
+//}
+//
+//void turn()
+//{
+//	venusleft.write(120);
+//	venusright.write(120);
+//}
+//
+//int readirlb() //reads ir left bottom. return unit to be determined
+//{
+//
+//}
+//
+//int readirrb() //reads ir right bottom. return unit to be determined
+//{
+//
+//}
+//
+//void stop() //stop function, makes the robot stop driving (if the servo's are properly set)
+//{
+//	venusleft.write(90);
+//	venusright.write(90);
+//}
+//
+//void servodrive(int left, int right, int n)
+//{ 
+//	int pulse;
+//	int prevpulse;
+//	int countpulse = 0;
+//
+//	prevpulse = digitalread(rightencoder); //initial value encoder
+//
+//	venusleft.write(left);
+//	venusright.write(right);
+//
+//	//////////////////////////////////////////////////////////////////////////
+//	//																		//
+//	//   continuous while loop to place scanning function in for marijn		//
+//	//		vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv			//
+//	//////////////////////////////////////////////////////////////////////////
+//	while (n>countpulse)
+//	{
+//		// function executed every time to check for obstacles
+//		if (checkobstacles())
+//			break;
+//
+//		pulse = digitalread(rightencoder);
+//		if (pulse != prevpulse){
+//			prevpulse = pulse;
+//			countpulse += 1;
+//		}
+//		//400 is arbitrary between  0 and 1024. this has to be tested. 
+//		//the value is somewhere in between 0 and 2^8 because of a change in light and dark reception of the sensor.
+//		//it will never be completly dark, that is why the value will never be zero.
+//		/*if (readirlb() < 400 || readirrb() < 400)  //hole sensing code has to be added
+//		{
+//			break; //some kind of notification has to be added that an emergency brake has been executed.
+//		}*/
+//	}
+//	stop();
+//}
+//
+//void drive(int distance, int angle)  //drive function with integer parameters distance and angle in degrees
+//{
+//	distance = 10 * distance;
+//	//turn part
+//	/*angle = angle % 360;*/ //2*pirad*k=2*pirad*(k+1)
+//	if (angle > 0 && angle != 180)  //turn left
+//	{	
+//		int turnn = round(((angle)* 100.0) / 1437.0); //number of pulses needed to turn. turns with both wheels
+//		servodrive(100, 100, turnn);
+//		//int turnn = ((angle * 200) / 1437); //turns with just one wheel
+//		//servodrive(90, 110, turnn);
+//	}
+//
+//	else if (angle == 180)
+//	{
+//		servodrive(100, 100, 13);
+//	}
+//
+//	else   //turn right
+//	{	
+//		int turnn = round(((-angle) *100.0) / 1437.0); //number of pulses needed to turn. turns with both wheels
+//		servodrive(80, 80, turnn);
+//		//int turnn = (((360-angle) * 200) / 1437); //turns with just one wheel
+//		//servodrive(90, 70, turnn);
+//	}
+//	//forward movement part
+//	int n = round((distance*100.0) / 1317.0); //number of pulses needed to drive distance. distance in mm
+//	servodrive(180, 0, n);
+//}
+//
+//void reverse(int distance) //makes the robot drive backwards a certain distance
+//{	
+//	int n = ((distance*100) / 1317); //number of pulses needed to drive distance
+//	serial.println(n);
+//	servodrive(0, 180, n);
+//}
 
+void drive(unsigned int distance, int angle)
+{
+	DraaiCounter = round(angle / 10);
+	if (DraaiCounter < 0){						//left angle
+		PLeft(abs(DraaiCounter) * (555 / 9));
+		FForward(distance * (2000 / 30));
+	}
+	else if (DraaiCounter == 0){					//straight forward
+		FForward(distance * (2000 / 30));
+	}
+	else{										//right angle
+		PRight(DraaiCounter * (555 / 9));
+		FForward(distance * (2000 / 30));
+	}
+
+}
+
+// Full speed forward
+void FForward(int distanceDelay){
+	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
+	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
+	delay(distanceDelay);                               // ...for 2 seconds
+}
+
+// Turn left in place
+void PLeft(int angleDelay){
+	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
+	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
+	delay(angleDelay);                                // ...for 0.6 seconds (er stond 600)
+}
+
+// Turn right in place
+void PRight(int angleDelay){
+	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
+	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
+	delay(angleDelay);                                // ...for 0.6 seconds ( er stond 600)
+}
+// Full speed backward
+void FBack(int distanceDelay){
+	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
+	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
+	delay(distanceDelay);                               // ...for 2 seconds
 }
 
 void stop() //Stop function, makes the robot stop driving (if the servo's are properly set)
 {
-	venusLeft.write(90);
-	venusRight.write(90);
+	servoLeft.writeMicroseconds(1500);         // Pin 13 stay still
+	servoRight.writeMicroseconds(1500);        // Pin 12 stay still
 }
 
-void servoDrive(int left, int right, int n)
-{ 
-	int pulse;
-	int prevpulse;
-	int countpulse = 0;
-
-	prevpulse = digitalRead(rightencoder); //initial value encoder
-
-	venusLeft.write(left);
-	venusRight.write(right);
-
-	//////////////////////////////////////////////////////////////////////////
-	//																		//
-	//   Continuous while loop to place scanning function in for Marijn		//
-	//		vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv			//
-	//////////////////////////////////////////////////////////////////////////
-	while (n>countpulse)
-	{
-		// Function executed every time to check for obstacles
-		if (!checkObstacles())
-			break;
-
-		pulse = digitalRead(rightencoder);
-		if (pulse != prevpulse){
-			prevpulse = pulse;
-			countpulse += 1;
-		}
-		//400 is arbitrary between  0 and 1024. This has to be tested. 
-		//The value is somewhere in between 0 and 2^8 because of a change in light and dark reception of the sensor.
-		//it will never be completly dark, that is why the value will never be zero.
-		/*if (readIRLB() < 400 || readIRRB() < 400)  //hole sensing code has to be added
-		{
-			break; //Some kind of notification has to be added that an emergency brake has been executed.
-		}*/
-	}
-	stop();
-}
-
-void drive(int distance, int angle)  //drive function with integer parameters distance and angle in degrees
-{
-	distance = 10 * distance;
-	//turn part
-	/*angle = angle % 360;*/ //2*pirad*k=2*pirad*(k+1)
-	if (angle > 0 && angle != 180)  //turn left
-	{	
-		int turnn = round(((angle)* 100.0) / 1437.0); //Number of pulses needed to turn. turns with both wheels
-		servoDrive(100, 100, turnn);
-		//int turnn = ((angle * 200) / 1437); //turns with just one wheel
-		//servoDrive(90, 110, turnn);
-	}
-
-	else if (angle == 180)
-	{
-		servoDrive(100, 100, 13);
-	}
-
-	else   //turn right
-	{	
-		int turnn = round(((-angle) *100.0) / 1437.0); //Number of pulses needed to turn. turns with both wheels
-		servoDrive(80, 80, turnn);
-		//int turnn = (((360-angle) * 200) / 1437); //turns with just one wheel
-		//servoDrive(90, 70, turnn);
-	}
-	//forward movement part
-	int n = round((distance*100.0) / 1317.0); //Number of pulses needed to drive distance. Distance in mm
-	servoDrive(180, 0, n);
-}
-
-void reverse(int distance) //Makes the robot drive backwards a certain distance
-{	
-	int n = ((distance*100) / 1317); //Number of pulses needed to drive distance
-	Serial.println(n);
-	servoDrive(0, 180, n);
-}
 
 int readIRMid() //reads Middle IR. Return unit to be determined
 {

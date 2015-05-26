@@ -6,8 +6,11 @@
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
 // REDUCING FILESIZES AND SRAM USAGE
+
+
 #define DEBUG true				
 #define Serial if(DEBUG)Serial
+
 
 // NOTE
 // Everything which has been given in degrees, uses a rotated polar system as reference:
@@ -107,6 +110,7 @@ void setup()
 	Serial.begin(9600);
 	
 	startSetup();
+
 	stop();
 	delay(1000);
 }
@@ -348,7 +352,7 @@ void scanSurroundings()
 int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 {
 	path temp = arrayData[0];
-	int repetition = 0;
+	unsigned int repetition = 0;
 	int startRepetition = 0;
 	int marge = 5;
 	int minID = 0;
@@ -379,26 +383,33 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 
 	// Run through the array again to gain the center lowest value within a certain range
 	// This avoids taking the latest lowest value when multiple values are equal
+	temp = arrayData[minID];
+	Serial.println(temp.distance);
+
 	for (int i = 0; i < arrayLength; ++i)
 	{
-		temp = arrayData[minID];
-		if (arrayData[i].distance <= (float)temp.distance*((100 + marge) / 100))
+		if (arrayData[i].distance == temp.distance)
 		{
 			// The measured value is approximately the same as the previous ones, so there is a bigger object
-			if (repetition == 0)
-				startRepetition = i;
+			repetition += 1;
 
-			++repetition;
+
+			if (repetition == 1)
+			{
+				startRepetition = i;
+			}
+
 		}
 		else
-			repetition = 0;
+		{
+			//repetition = 0;
+		}
 	}
-
 
 	if (repetition > 1)
 	{
 		// Gain the middle index value of the input series
-		minID = startRepetition + (repetition / 2);
+		minID = startRepetition + round((repetition / 2));
 	}
 	else if (repetition == 1)
 	{
@@ -648,7 +659,7 @@ void IRU(){
 			if (counter > 0){								//count grey stripes
 				openGrabber();								//drop the stone
 				counter = 0;
-				reverse(25);
+				//reverse(25);
 			}
 			else{											//i can count grey stripes
 				++counter;

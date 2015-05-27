@@ -53,15 +53,6 @@ void startSetup()
 //	venusright.write(120);
 //}
 //
-//int readirlb() //reads ir left bottom. return unit to be determined
-//{
-//
-//}
-//
-//int readirrb() //reads ir right bottom. return unit to be determined
-//{
-//
-//}
 //
 //void stop() //stop function, makes the robot stop driving (if the servo's are properly set)
 //{
@@ -146,26 +137,29 @@ void startSetup()
 
 void drive(unsigned int distance, int angle)
 {
-	DraaiCounter = round(angle / 10);
-	if (DraaiCounter < 0){						//left angle
-		PLeft(abs(DraaiCounter) * (555 / 9));
-		FForward(distance * (2000 / 30));
+	if (angle < 0){						//left angle
+		PLeft(abs(angle) * round(555 / 90));
+		FForward(distance * round(2000 / 30));
 	}
-	else if (DraaiCounter == 0){					//straight forward
-		FForward(distance * (2000 / 30));
+	else if (angle == 0){					//straight forward
+		FForward(distance * round(2000 / 30));
 	}
 	else{										//right angle
-		PRight(DraaiCounter * (555 / 9));
-		FForward(distance * (2000 / 30));
+		PRight(abs(angle) * round(555 / 90));
+		FForward(distance * round(2000 / 30));
 	}
 
 }
 
 // Full speed forward
 void FForward(int distanceDelay){
-	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-	delay(distanceDelay);                               // ...for 2 seconds
+	if (distanceDelay != 0){
+		servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
+		servoRight.writeMicroseconds(1300);        // Right wheel clockwise
+		delay(distanceDelay);       
+	}
+                        // ...for 2 seconds
+	stop();
 }
 
 // Turn left in place
@@ -207,6 +201,16 @@ int readIRGrab()    //Reads IR Grabber. Return unit to be determined
 
 int readLightSense()   //Reads Light Sensor. Return unit to be determined
 {	
+
+}
+
+int readirlb() //reads ir left bottom. return unit to be determined
+{
+
+}
+
+int readirrb() //reads ir right bottom. return unit to be determined
+{
 
 }
 

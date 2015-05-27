@@ -163,14 +163,14 @@ int FForward(int distanceDelay) {
 			// Loops a distance amount of time, 66.666ms per cm
 			delay(2000 / 30);
 		}
-
+		//"millis-delay";
 		//int t = millis() + distanceDelay;	//Timestamp + time wallee has to drive
-		//while (millis() < (t)){
+		//while (millis() < (t)){		//while loop that will stay in it for a certain time distanceDelay
 		//	//IRscan;
 		//	//Mappen;
 		//	//Ultratopread
 		//	checkObstacles();
-		//	//Spakentellen
+		//	//Spakentellen/Count spokes to find the distance traveled (approximately
 		//	if (digitalRead(rightencoder) != prevpulse){
 		//		prevpulse = !prevpulse;
 		//		countpulse++;
@@ -179,6 +179,7 @@ int FForward(int distanceDelay) {
 
 	}
 	stop();
+	//return (countpulse*distance per spoke=13.7); //return needed for the millis()-delay
 	return i;
 }
 

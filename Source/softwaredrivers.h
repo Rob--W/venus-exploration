@@ -6,9 +6,9 @@ void startSetup(); //Content needed for the pin initialisation in function setup
 /*
 void turn();
 */
-int readIRLB();		//Reads IR Left Bottom. Return unit to be determined
+int readIRLB();		//Reads IR Left Bottom. Return unit to be determined. has to be analog
 
-int readIRRB();		//Reads IR Right Bottom. Return unit to be determined
+int readIRRB();		//Reads IR Right Bottom. Return unit to be determined. has to be analog
 
 void stop();	//Stop function, makes the robot stop driving (if the servo's are properly set)
 
@@ -23,7 +23,7 @@ void stop();	//Stop function, makes the robot stop driving (if the servo's are p
 // Returns the traveled distance (in cm).
 int drive(unsigned int distance, int angle);
 // Move forwards at the full speed.
-// distanceDelay is the maximum distance (in cm).
+// distanceDelay is the approximate time needed to drive distance (in cm).
 // Returns the traveled distance (in cm).
 int FForward(int distanceDelay);
 void FBack(int distanceDelay);

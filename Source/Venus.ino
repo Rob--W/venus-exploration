@@ -89,8 +89,7 @@ bool removePath(unsigned int pathID);
 void changePath(unsigned int pathID, unsigned int distance, int angle);
 void reversePath();
 void scanSurroundings();
-int minValue(path arrayData[], unsigned int arrayLength, bool min);
-int minValue(int arrayData[], unsigned int arrayLength, bool min);
+path getClosestPath(path arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
 path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination, unsigned int distanceDriven);
 position toCartesian(path toCoordinate);
@@ -158,14 +157,11 @@ void initiateDrive()
 	// Start scanning with top US-sensor
 	scanSurroundings();
 
-	// Get the interesting information from the acquired data
+	// Set a new path to the closest detected object.
 	// (set the last parameter to false to gain the max value)
-	unsigned int minID = minValue(usData, SAMPLES, true);
-
-	// Set a new path to the closest detected object 
 	// Must be extended using the padding matrix to determine
 	// whether we've already been there.
-	newPath = usData[minID];
+	newPath = getClosestPath(usData, SAMPLES, true);
 
 	// Add path to array
 	setPath(newPath);
@@ -351,14 +347,15 @@ void scanSurroundings()
 	readUltraTop(90); 
 }
 
-// Determine the lowest (or highest, set min to false) distance value of a path array (returns the array index)
-// Including input filter which determines the center value of multiple equal minimums
-int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
+// Find the path with the smallest distance (but still larger than SAFE_DISTANCE).
+// arrayData is an ordered list of measurements. If multiple paths have the same
+// distance, then the center of these paths is returned.
+path getClosestPath(path arrayData[], unsigned int arrayLength, bool min = true)
 {
+	path smallest = arrayData[0];
 	path temp = arrayData[0];
 	unsigned int repetition = 0;
 	int startRepetition = 0;
-	int marge = 5;
 	int minID = 0;
 
 	// Run through the entire array
@@ -421,36 +418,7 @@ int minValue(path arrayData[], unsigned int arrayLength, bool min = true)
 	}
 
 	// Return the array ID of the wanted value.
-	return minID;
-}
-
-// Determine the lowest (or highest, set min to false) value of an integer array (returns the array index)
-int minValue(int arrayData[], unsigned int arrayLength, bool min = true)
-{
-	int temp = arrayData[0];
-	int minID = 0;
-
-	for (int i = 0; i < arrayLength; ++i)
-	{
-		if (min)
-		{
-			if (arrayData[i] < temp)
-			{
-				temp = arrayData[i];
-				minID = i;
-			}
-		}
-		else
-		{
-			if (arrayData[i] > temp)
-			{
-				temp = arrayData[i];
-				minID = i;
-			}
-		}
-	}
-
-	return minID;
+	return usData[minID];
 }
 
 // Calculate the shortest path between to given points. Returned path is drive ready.

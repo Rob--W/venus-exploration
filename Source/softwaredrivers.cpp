@@ -151,6 +151,10 @@ int drive(unsigned int distance, int angle)
 int FForward(int distanceDelay) {
 	// Traveled distance (in cm).
 	int i = 0;
+	int countpulse = 0;
+	bool prevpulse = digitalRead(rightencoder);
+
+
 	if (distanceDelay != 0) {
 		servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
 		servoRight.writeMicroseconds(1300);        // Right wheel clockwise
@@ -159,6 +163,20 @@ int FForward(int distanceDelay) {
 			// Loops a distance amount of time, 66.666ms per cm
 			delay(2000 / 30);
 		}
+
+		//int t = millis() + distanceDelay;	//Timestamp + time wallee has to drive
+		//while (millis() < (t)){
+		//	//IRscan;
+		//	//Mappen;
+		//	//Ultratopread
+		//	checkObstacles();
+		//	//Spakentellen
+		//	if (digitalRead(rightencoder) != prevpulse){
+		//		prevpulse = !prevpulse;
+		//		countpulse++;
+		//	}
+		//}
+
 	}
 	stop();
 	return i;

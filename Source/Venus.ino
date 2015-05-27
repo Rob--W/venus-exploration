@@ -46,10 +46,11 @@
 #define SAFE_DISTANCE	15				// Offset distance due placement of top/bottom US sensor (stopping distance)
 
 // Path struct holds basic information about driven paths
+typedef unsigned int DistanceType;
 struct path
 {
 	// unsigned to prevent negative numbers
-	unsigned int distance;
+	DistanceType distance;
 	// int due SRAM limitations, otherwise consuming 32*PATH_ENTRIES bytes
 	int angle;
 };
@@ -347,78 +348,42 @@ void scanSurroundings()
 	readUltraTop(90); 
 }
 
+// TODO(rob): The next comment is not entirely true, see the comments within the
+// function for the actual behavior.
 // Find the path with the smallest distance (but still larger than SAFE_DISTANCE).
 // arrayData is an ordered list of measurements. If multiple paths have the same
 // distance, then the center of these paths is returned.
 path getClosestPath(path arrayData[], unsigned int arrayLength, bool min = true)
 {
-	path smallest = arrayData[0];
-	path temp = arrayData[0];
-	unsigned int repetition = 0;
-	int startRepetition = 0;
-	int minID = 0;
+	byte low = 0;
+	byte high = 0;
+	DistanceType extremeDistance = arrayData[0].distance;
 
-	// Run through the entire array
-	for (int i = 0; i < arrayLength; ++i)
-	{
-		// Check whether we want the min of max value
-		if (min)
-		{
-			// Check whether there is a value lower that the previously lowest value.
-			if (arrayData[i].distance < temp.distance)
-			{
-				temp = arrayData[i];
-				minID = i;
-			}
-		}
-		else
-		{
-			// Check whether there is value larger than the previous largest value.
-			if (arrayData[i].distance > temp.distance)
-			{
-				temp = arrayData[i];
-				minID = i;
-			}
+	// TODO(rob): What if the distances is smaller than SAFE_DISTANCE?
+	// Marijn said that the function is supposed to ignore paths with a distance
+	// shorter than SAFE_DISTANCE. Should we adapt the next logic to implement
+	// this requirement?
+
+	// The next loop attempts to find the low index and the high index of the
+	// range of extreme (lowest/highest) distances. In the end, the middle of
+	// these values will be returned. For example:
+	// 100, 22, 22, 22, 22, 300
+	//      ^    ^       ^
+	//     low   |      high
+	//      return value (=center among the elements with the minimal distance).
+	for (int i = 0; i < arrayLength; ++i) {
+		DistanceType distance = arrayData[i].distance;
+		if (min ? distance < extremeDistance : distance > extremeDistance) {
+			// Found a new extreme (lowest or highest) value.
+			low = i;
+			high = i;
+			extremeDistance = distance;
+		} else if (distance == extremeDistance) {
+			high = i;
 		}
 	}
 
-	// Run through the array again to gain the center lowest value within a certain range
-	// This avoids taking the latest lowest value when multiple values are equal
-	temp = arrayData[minID];
-	Serial.println(temp.distance);
-
-	for (int i = 0; i < arrayLength; ++i)
-	{
-		if (arrayData[i].distance == temp.distance)
-		{
-			// The measured value is approximately the same as the previous ones, so there is a bigger object
-			repetition += 1;
-
-
-			if (repetition == 1)
-			{
-				startRepetition = i;
-			}
-
-		}
-		else
-		{
-			//repetition = 0;
-		}
-	}
-
-	if (repetition > 1)
-	{
-		// Gain the middle index value of the input series
-		minID = startRepetition + round((repetition / 2));
-	}
-	else if (repetition == 1)
-	{
-		minID = startRepetition;
-	}
-
-	// Return the array ID of the wanted value.
-	return usData[minID];
+	return arrayData[low + round((high - low) / 2)];
 }
 
 // Calculate the shortest path between to given points. Returned path is drive ready.

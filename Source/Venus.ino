@@ -43,7 +43,7 @@
 #define SAMPLES			19				// Number of samples to take for the top-US sensor
 #define PI				3.14159265359	// Obviously
 #define USSERVO_OFFSET	90				// Offset in the data for the top servo
-#define SAFE_DISTANCE	12				// Offset distance due placement of top/bottom US sensor (stopping distance)
+#define SAFE_DISTANCE	15				// Offset distance due placement of top/bottom US sensor (stopping distance)
 
 // Path struct holds basic information about driven paths
 struct path
@@ -76,6 +76,9 @@ int loopCounter = 0;
 path paths[PATH_ENTRIES] = { NULL };
 unsigned int latestBaseIndex = 0;
 
+// Dodge counter
+unsigned int startDodge = 0;
+unsigned int dodgeCounter = 0;
 
 // ----------------------------------------------------------
 // PROTOTYPES
@@ -99,6 +102,8 @@ void USU();
 void USD();
 bool One();
 
+void dodge(unsigned int distance, int angle);
+
 // ----------------------------------------------------------
 // FUNCTIONS
 // ----------------------------------------------------------
@@ -120,6 +125,7 @@ void loop()
 {
 	// Start the strategy
 	initiateDrive();
+
 }
 
 // Routine for the obstacle functions and things that needs to be handled
@@ -163,8 +169,6 @@ void initiateDrive()
 
 	// Add path to array
 	setPath(newPath);
-	Serial.println(newPath.distance);
-	Serial.println(newPath.angle);
 
 	// Drive to it
 	drive(newPath.distance, newPath.angle*-1);
@@ -708,9 +712,39 @@ bool One(){
 		stop();
 		delay(1000);
 		drive(0, 90);
+		path dodge;
+		dodge.distance = 0;
+		dodge.angle = 90;
+		setPath(dodge);
 		delay(1000);
 		return false;
 	}
 
 	return true;
+}
+
+// Function to compress actions for making a dodge
+void dodge(unsigned int distance, int angle)
+{
+	// We receive the things a normal drive function would receive
+	// Difference is that we need to keep track of what is happening
+	// to be able to recover from our moves send to this function
+	// and to keep the waypoint array organized
+	path dodge;
+	dodge.distance = distance;
+	dodge.angle = angle;
+
+	// First dodge move? Save the currentPathID
+	if (startDodge == 0)
+		startDodge = currentPathID;
+
+	// Keep track of the number of moves
+	++dodgeCounter;
+
+	// Add the path to the waypoint array
+	setPath(dodge);
+
+	// Execute the movement
+	drive(dodge.distance, dodge.angle);
+
 }

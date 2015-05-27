@@ -137,7 +137,7 @@ void startSetup()
 
 long drive(unsigned int distance, int angle)
 {
-<<<<<<< HEAD
+
 	if (angle < 0){						//left angle
 		PLeft(abs(angle) * round(555 / 90));
 		FForward(distance * round(2000 / 30));
@@ -148,7 +148,7 @@ long drive(unsigned int distance, int angle)
 	else{										//right angle
 		PRight(abs(angle) * round(555 / 90));
 		FForward(distance * round(2000 / 30));
-=======
+
 	long distance;
 	DraaiCounter = round(angle / 10);
 	if (DraaiCounter < 0){						//left angle
@@ -161,13 +161,12 @@ long drive(unsigned int distance, int angle)
 	else{										//right angle
 		PRight(DraaiCounter * (555 / 9));
 		distance = FForward(distance);
->>>>>>> 3de7c09e383ed05de72582411ec4b56841c2a7ce
 	}
 	return distance;
 }
 
 // Full speed forward
-<<<<<<< HEAD
+
 void FForward(int distanceDelay){
 	if (distanceDelay != 0){
 		servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
@@ -176,7 +175,7 @@ void FForward(int distanceDelay){
 	}
                         // ...for 2 seconds
 	stop();
-=======
+
 long FForward(int distanceDelay){
 	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
 	servoRight.writeMicroseconds(1300);        // Right wheel clockwise 
@@ -187,7 +186,7 @@ long FForward(int distanceDelay){
 			delay(2000 / 30);
 		}
 	return i;
->>>>>>> 3de7c09e383ed05de72582411ec4b56841c2a7ce
+
 }
 
 // Turn left in place

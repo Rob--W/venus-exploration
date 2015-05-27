@@ -135,31 +135,33 @@ void startSetup()
 //	servodrive(0, 180, n);
 //}
 
-void drive(unsigned int distance, int angle)
+int drive(unsigned int distance, int angle)
 {
-	if (angle < 0){						//left angle
+	if (angle < 0) {
+		// left angle
 		PLeft(abs(angle) * round(555 / 90));
-		FForward(distance * round(2000 / 30));
-	}
-	else if (angle == 0){					//straight forward
-		FForward(distance * round(2000 / 30));
-	}
-	else{										//right angle
+	} else if (angle > 0) {
+		// right angle
 		PRight(abs(angle) * round(555 / 90));
-		FForward(distance * round(2000 / 30));
 	}
-
+	return FForward(distance * round(2000 / 30));
 }
 
 // Full speed forward
-void FForward(int distanceDelay){
-	if (distanceDelay != 0){
+int FForward(int distanceDelay) {
+	// Traveled distance (in cm).
+	int i = 0;
+	if (distanceDelay != 0) {
 		servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
 		servoRight.writeMicroseconds(1300);        // Right wheel clockwise
 		delay(distanceDelay);       
+		for (; i < distanceDelay && checkObstacles(); ++i) {
+			// Loops a distance amount of time, 66.666ms per cm
+			delay(2000 / 30);
+		}
 	}
-                        // ...for 2 seconds
 	stop();
+	return i;
 }
 
 // Turn left in place

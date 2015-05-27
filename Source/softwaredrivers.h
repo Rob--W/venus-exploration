@@ -19,8 +19,13 @@ void stop();	//Stop function, makes the robot stop driving (if the servo's are p
 //void servoDrive(int left, int right, int n);	//servo control for the repetitive part of the drive functions.
 
 //distance
-void drive(unsigned int distance, int angle);
-void FForward(int distanceDelay);
+// distance is the maximum distance (in cm).
+// Returns the traveled distance (in cm).
+int drive(unsigned int distance, int angle);
+// Move forwards at the full speed.
+// distanceDelay is the maximum distance (in cm).
+// Returns the traveled distance (in cm).
+int FForward(int distanceDelay);
 void FBack(int distanceDelay);
 void PRight(int angleDelay);
 void PLeft(int angleDelay);

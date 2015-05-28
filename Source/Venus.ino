@@ -148,6 +148,7 @@ void loop()
 // during the driving procedure
 bool checkObstacles()
 {
+	crashed = false;
 	// Simple (placeholder) collission detection
 	if (!One())
 		crashed = true;				// Collission detected!

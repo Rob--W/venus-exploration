@@ -162,14 +162,14 @@ int FForward(int distanceDelay) {
 
 
 	if (distanceDelay != 0) {
-		//delay(distanceDelay);       
-		for (; i < distanceDelay; ++i) {
+		delay(distanceDelay);       
+		/*for (; i < distanceDelay; ++i) {
 			// Loops a distance amount of time, 66.666ms per cm
 			if (checkObstacles())
-				break;
-			//,Serial.println("spam");
+				//break;
+			//Serial.println("spam");
 			delay(2000 / 30);
-		}
+		}*/
 		//"millis-delay";
 		//int t = millis() + distanceDelay;	//Timestamp + time wallee has to drive
 		//while (millis() < (t)){		//while loop that will stay in it for a certain time distanceDelay

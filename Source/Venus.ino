@@ -118,6 +118,19 @@ void setup()
 
 	stop();
 	delay(1000);
+	/*
+	paths[0].angle = 30;
+	paths[0].distance = 20;
+
+	paths[1].angle = -30;
+	paths[1].distance = 20;
+
+	paths[2].angle = 30;
+	paths[2].distance = 20;
+
+	paths[3].angle = -30;
+	paths[3].distance = 20;
+	*/
 }
 
 // Main program loop
@@ -126,6 +139,9 @@ void loop()
 	// Start the strategy
 	initiateDrive();
 
+	//Serial.println(drive(200, 0));
+	//crashed = false;
+	//delay(2000);
 }
 
 // Routine for the obstacle functions and things that needs to be handled
@@ -152,6 +168,13 @@ void initiateDrive()
 	// Gain information using the top US-sensor
 	if (loopCounter > 3) {
 		reversePath();
+		/*drive(0, 180);
+		delay(1000);
+		path temp = shortestPath(currentPathID - 1, 0);
+		Serial.print(temp.distance);
+		Serial.print(" - ");
+		Serial.println(temp.angle);
+		drive(temp.distance, temp.angle);*/
 		while (true){}
 	}
 
@@ -167,12 +190,26 @@ void initiateDrive()
 	// Add path to array
 	setPath(newPath);
 
+	//newPath = paths[currentPathID];
 	// Drive to it
-	drive(newPath.distance, newPath.angle*-1);
-	
+
+	Serial.print("Waypoint: ");
+	Serial.print(newPath.distance);
+	Serial.print(" at:  ");
+	Serial.println(newPath.angle);
+
+	/*DistanceType drivenDistance = */drive(newPath.distance, newPath.angle);
+	delay(1000);
+	/*if (drivenDistance < newPath.distance)
+	{
+		changePath(currentPathID - 1, drivenDistance, 0);
+		Serial.print("Changed path length: ");
+		Serial.println(drivenDistance);
+	}*/
 	// Check whether the task completed successfully
 	if (crashed)
 	{
+		/*
 		// Remove the planned direction
 		removePath(currentPathID - 1);
 
@@ -180,11 +217,12 @@ void initiateDrive()
 		newPath.angle = 90;
 		newPath.distance = 0;
 		setPath(newPath);
+		*/
 
 		// Crash resolved, setting back the handler
 		crashed = false;
 	}
-
+	//++currentPathID;
 	++loopCounter;
 }
 
@@ -266,11 +304,7 @@ void reversePath()
 	Serial.println("Returning to base: ");
 	for (int i = 0; i < currentPathID; ++i)
 	{
-		Serial.print(i);
-		Serial.print(" - ");
-		Serial.print(paths[i].angle);
-		Serial.print(" - ");
-		Serial.println(paths[i].distance);
+		
 	}
 
 	delay(2000);
@@ -278,20 +312,43 @@ void reversePath()
 	// Revert path, i to 0 to stop at the point before the base
 	for (int i = currentPathID - 1; i >= 0; --i)
 	{
+		Serial.print(i);
+		Serial.print(" - ");
+
 		if (i == currentPathID - 1) {
 			// Turn around and drive the set distance
+			Serial.print(paths[i].distance);
+			Serial.print(" - ");
+			Serial.println(180);
+
 			drive(paths[i].distance, 180);
 
 			// Give it time to turn around
 			delay(1000);
 		}
-		else if (i == 0)
-			drive(paths[i].distance, 0);
-		else
-			drive(paths[i].distance, paths[i - 1].angle*-1);
+		else if (i == 0) {
+			Serial.println("i = 0");
+			Serial.print(paths[i].distance);
+			Serial.print(" - ");
+			Serial.println(0);
+			drive(paths[i].distance, -paths[i+1].angle);
+		}
+		else {
+			Serial.print(paths[i].distance);
+			Serial.print(" - ");
+			Serial.println(-paths[i+1].angle);
+			drive(paths[i].distance, -paths[i + 1].angle);
+		}
 
 		delay(1000);
 	}
+	Serial.print("-1");
+	Serial.print(" - ");
+	Serial.print(0);
+	Serial.print(" - ");
+	Serial.println(-paths[0].angle);
+	drive(0, -paths[0].angle);
+
 	Serial.println("Done!");
 
 	delay(1000);
@@ -324,7 +381,7 @@ void scanSurroundings()
 
 		// Make objects which are too close uninteresting by setting the distance to max
 		if (distance < SAFE_DISTANCE) {
-			distance = 500; // set distance out of the scope
+			//distance = 500; // set distance out of the scope
 		}
 		else {
 			// Substract the collision distance to prevent riding into objects
@@ -371,7 +428,7 @@ path getClosestPath(path arrayData[], unsigned int arrayLength, bool min = true)
 	//      ^    ^       ^
 	//     low   |      high
 	//      return value (=center among the elements with the minimal distance).
-	for (int i = 0; i < arrayLength; ++i) {
+	/*for (int i = 0; i < arrayLength; ++i) {
 		DistanceType distance = arrayData[i].distance;
 		if (min ? distance < extremeDistance : distance > extremeDistance) {
 			// Found a new extreme (lowest or highest) value.
@@ -383,7 +440,75 @@ path getClosestPath(path arrayData[], unsigned int arrayLength, bool min = true)
 		}
 	}
 
-	return arrayData[low + round((high - low) / 2)];
+	return arrayData[low + round((high - low) / 2)];*/
+
+	path smallest = arrayData[0];
+	path temp = arrayData[0];
+	unsigned int repetition = 0;
+	int startRepetition = 0;
+	int minID = 0;
+
+	// Run through the entire array
+	for (int i = 0; i < arrayLength; ++i)
+	{
+		// Check whether we want the min of max value
+		if (min)
+		{
+			// Check whether there is a value lower that the previously lowest value.
+			if (arrayData[i].distance < temp.distance)
+			{
+				temp = arrayData[i];
+				minID = i;
+			}
+		}
+		else
+		{
+			// Check whether there is value larger than the previous largest value.
+			if (arrayData[i].distance > temp.distance)
+			{
+				temp = arrayData[i];
+				minID = i;
+			}
+		}
+	}
+
+	// Run through the array again to gain the center lowest value within a certain range
+	// This avoids taking the latest lowest value when multiple values are equal
+	temp = arrayData[minID];
+	Serial.println(temp.distance);
+
+	for (int i = 0; i < arrayLength; ++i)
+	{
+		if (arrayData[i].distance == temp.distance)
+		{
+			// The measured value is approximately the same as the previous ones, so there is a bigger object
+			repetition += 1;
+
+
+			if (repetition == 1)
+			{
+				startRepetition = i;
+			}
+
+		}
+		else
+		{
+			//repetition = 0;
+		}
+	}
+
+	if (repetition > 1)
+	{
+		// Gain the middle index value of the input series
+		minID = startRepetition + round((repetition / 2));
+	}
+	else if (repetition == 1)
+	{
+		minID = startRepetition;
+	}
+
+	// Return the array ID of the wanted value.
+	return usData[minID];
 }
 
 // Calculate the shortest path between to given points. Returned path is drive ready.

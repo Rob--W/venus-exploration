@@ -137,13 +137,17 @@ void startSetup()
 
 int drive(unsigned int distance, int angle)
 {
-	if (angle < 0) {
+	if (angle == 180) {
+		Turn180();
+	}
+	else if (angle > 0) {
 		// left angle
 		PLeft(abs(angle) * round(555 / 90));
-	} else if (angle > 0) {
+	} else if (angle < 0) {
 		// right angle
 		PRight(abs(angle) * round(555 / 90));
-	}
+	} 
+
 	return FForward(distance * round(2000 / 30));
 }
 
@@ -153,14 +157,17 @@ int FForward(int distanceDelay) {
 	int i = 0;
 	int countpulse = 0;
 	bool prevpulse = digitalRead(rightencoder);
+	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
+	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
 
 
 	if (distanceDelay != 0) {
-		servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-		servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-		delay(distanceDelay);       
-		for (; i < distanceDelay && checkObstacles(); ++i) {
+		//delay(distanceDelay);       
+		for (; i < distanceDelay; ++i) {
 			// Loops a distance amount of time, 66.666ms per cm
+			if (checkObstacles())
+				break;
+			//,Serial.println("spam");
 			delay(2000 / 30);
 		}
 		//"millis-delay";
@@ -201,6 +208,14 @@ void FBack(int distanceDelay){
 	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
 	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
 	delay(distanceDelay);                               // ...for 2 seconds
+}
+
+void Turn180() {
+	servoLeft.writeMicroseconds(1700);
+	servoRight.writeMicroseconds(1700);
+	delay(1075);
+
+	stop();
 }
 
 void stop() //Stop function, makes the robot stop driving (if the servo's are properly set)

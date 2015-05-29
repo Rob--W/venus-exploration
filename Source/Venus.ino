@@ -154,6 +154,7 @@ void initiateDrive()
 	// Add path to array
 	setPath(newPath);
 
+	// Calculate the coordinates from the given array
 	path temp = setCoordinates();
 
 	if (getVisits(temp.mapX, temp.mapY) <= INTEREST_THRESHOLD){
@@ -165,7 +166,10 @@ void initiateDrive()
 		addVisit(temp.mapX, temp.mapY);
 	}
 	else {
+		// Create variables where getSuggestion can store the results in
 		byte suggestedX = 0, suggestedY = 0;
+
+		// Check whether there is a direction which could be interesting
 		if (getSuggestion(temp.mapX, temp.mapY, &suggestedX, &suggestedY))
 		{
 			// The given location is interesting, we need to head in that location
@@ -216,6 +220,8 @@ void initiateDrive()
 
 		// Set the new obstacle at the position we justed stopped
 		setObstacle(temp.mapX, temp.mapY);
+		// And add a visit
+		addVisit(temp.mapX, temp.mapY);
 
 		Serial.print("Changed path length: ");
 		Serial.println(drivenDistance);
@@ -429,7 +435,7 @@ path shortestPath(unsigned int from, unsigned int to)
 	short int invert = 1;
 	int reverse = 0;
 	bool reversePath = false;
-	
+
 	// Check whether we want to reverse the path
 	if (from > to)
 	{
@@ -442,27 +448,33 @@ path shortestPath(unsigned int from, unsigned int to)
 
 	// Then calculate the distance between the array indices
 	pathDistance = to - from;
-
-	// Repeatedly add the conversions from polar to cartesian
-	for (int i = from; i - from < pathDistance; ++i)
+	
+	// In case of the first entry
+	if (to == 0 && from == 0)
 	{
-		// Calculate absolute angle
-		angle += (paths[i].angle);
-		distance = paths[i].distance;
+		x = paths[0].distance*cos(paths[0].angle * PI / 180);
+		y = paths[0].distance*sin(paths[0].angle * PI / 180);
 
-		// Convert from polar to cartesian, minding the rotation of the field
-		x = distance*cos(angle * PI / 180); 
-		y = distance*sin(angle * PI / 180);
-
-		// Add the coordinates 
-		pathX += x;
-		pathY += y;
+		pathX = x;
+		pathY = y;
 	}
-	// Debugging purposes
-	/*
-	Serial.println(pathX);
-	Serial.println(pathY);
-	*/
+	else {
+		// Repeatedly add the conversions from polar to cartesian
+		for (int i = from; i - from <= pathDistance; ++i)
+		{
+			// Calculate absolute angle
+			angle += (paths[i].angle);
+			distance = paths[i].distance;
+
+			// Convert from polar to cartesian, minding the rotation of the field
+			x = distance*cos(angle * PI / 180);
+			y = distance*sin(angle * PI / 180);
+
+			// Add the coordinates 
+			pathX += x;
+			pathY += y;
+		}
+	}
 
 	// Correction when the x-values are negative
 	if (pathX < 0)
@@ -474,7 +486,7 @@ path shortestPath(unsigned int from, unsigned int to)
 	// Calculate the shortest distance using Pythagoras. Rounding to prevent inaccuracy due conversion from float to int
 	newPath.distance = round(sqrt(pow(pathX, 2) + pow(pathY, 2)));
 	// And the angle using the  arc-tan and the corrections
-	finalAngle =  round((atan(pathY / pathX))*(180 / PI)*invert - reverse);
+	finalAngle = round((atan(pathY / pathX))*(180 / PI)*invert - reverse);
 
 	// Extra correction when we want to drive the path in reverse direction (need to find out why this is necessary)
 	if (reversePath && finalAngle < 0)
@@ -586,19 +598,28 @@ path toPolar(byte x, byte y)
 // When adding a new path, first add the path using setPath, then call this function to add the coordinates to the array-entry of the path
 // This to improve efficiency when doing map operations
 path setCoordinates()
-{	
-	// Get the coordinates of the new point
-	path temp = shortestPath(0, currentPathID - 1);
+{
+	int pathX = 0, pathY = 0;
+	// Add the current known coordinates
+	for (int i = 0; i < currentPathID - 1; ++i)
+	{
+		pathX += paths[i].mapX;
+		pathY += paths[i].mapY;
+	}
+
+	// Add the known coordinates of the last point
+	pathX += toCartesian(paths[currentPathID - 1], true);
+	pathY += toCartesian(paths[currentPathID - 1], false);
 
 	// Calculate the coordinates and add them to the path
-	temp.mapX = toMapCoordinate(toCartesian(temp, true));
-	temp.mapY = toMapCoordinate(toCartesian(temp, false));
+	paths[currentPathID - 1].mapX = toMapCoordinate(pathX);
+	paths[currentPathID - 1].mapY = toMapCoordinate(pathY);
 
 	// Add the coordinates to the array entry
-	changePath(currentPathID - 1, NULL, NULL, temp.mapX, temp.mapY);
+	changePath(currentPathID - 1, NULL, NULL, paths[currentPathID - 1].mapX, paths[currentPathID - 1].mapY);
 
 	// return the path to be able to use the coordinates
-	return temp;
+	return paths[currentPathID - 1];
 }
 
 /*UltrasoonUP*/

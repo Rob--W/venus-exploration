@@ -1,9 +1,9 @@
 #include "pathlogic.h"
 
-byte getClosestPathIndex(path arrayData[], unsigned int arrayLength,
+unsigned int getClosestPathIndex(path arrayData[], unsigned int arrayLength,
 		bool min = true) {
-	byte bestLow = 0;
-	byte bestLength = 0;
+	unsigned int bestLow = 0;
+	unsigned int bestLength = 0;
 	DistanceType extremeDistance = arrayData[0].distance;
 
 	// The next loop attempts to finds the longest sequence with the smallest

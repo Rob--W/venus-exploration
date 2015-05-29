@@ -13,7 +13,8 @@ struct path
 };
 
 // Find the middle index of the longest subsequence. See getClosestPath.
-byte getClosestPathIndex(path arrayData[], unsigned int arrayLength, bool min);
+unsigned int getClosestPathIndex(path arrayData[], unsigned int arrayLength,
+		bool min);
 
 // Finds the longest sequence with the smallest distance, and returns the
 // path at the middle of this sequence. For example:

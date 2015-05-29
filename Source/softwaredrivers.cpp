@@ -2,6 +2,8 @@
 #include <Servo.h>
 #include "softwaredrivers.h"
 
+#define US_BOTPIN_O 4
+#define US_BOTPIN_I 5
 
 Servo servoLeft;
 Servo servoRight;
@@ -31,6 +33,8 @@ void startSetup()
 
 	pinMode(leftencoder, INPUT);
 	pinMode(rightencoder, INPUT);
+	pinMode(US_BOTPIN_O, OUTPUT);
+	pinMode(US_BOTPIN_I, INPUT);
 
 }
 
@@ -301,18 +305,16 @@ int readUltraBot()
 
 	// The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
 	// Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
-	pinMode(pingPin, OUTPUT);
-	digitalWrite(pingPin, LOW);
+	digitalWrite(US_BOTPIN_O, LOW);
 	delayMicroseconds(2);
-	digitalWrite(pingPin, HIGH);
+	digitalWrite(US_BOTPIN_O, HIGH);
 	delayMicroseconds(5);
-	digitalWrite(pingPin, LOW);
+	digitalWrite(US_BOTPIN_O, LOW);
 
 	// The same pin is used to read the signal from the PING))): a HIGH
 	// pulse whose duration is the time (in microseconds) from the sending
 	// of the ping to the reception of its echo off of an object.
-	pinMode(pingPin, INPUT);
-	duration = pulseIn(pingPin, HIGH);
+	duration = pulseIn(US_BOTPIN_I, HIGH);
 
 	// convert the time into a distance
 	cm = microsecondsToCentimeters(duration);

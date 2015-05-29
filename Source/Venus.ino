@@ -2,12 +2,11 @@
 #include <math.h>
 #include <Servo.h>
 #include "softwaredrivers.h"
+#include "location.h"
 
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
 // REDUCING FILESIZES AND SRAM USAGE
-
-
 #define DEBUG true				
 #define Serial if(DEBUG)Serial
 
@@ -39,27 +38,26 @@
 // VARIABLE DECLARATION
 // ----------------------------------------------------------
 
-#define PATH_ENTRIES	100				// Maximum number of allowed paths
-#define SAMPLES			19				// Number of samples to take for the top-US sensor
-#define PI				3.14159265359	// Obviously
-#define USSERVO_OFFSET	90				// Offset in the data for the top servo
-#define SAFE_DISTANCE	15				// Offset distance due placement of top/bottom US sensor (stopping distance)
+#define PATH_ENTRIES		100				// Maximum number of allowed paths
+#define SAMPLES				19				// Number of samples to take for the top-US sensor
+#define PI					3.14159265359	// Obviously
+#define USSERVO_OFFSET		90				// Offset in the data for the top servo
+#define SAFE_DISTANCE		15				// Offset distance due placement of top/bottom US sensor (stopping distance)
+#define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 
 // Path struct holds basic information about driven paths
 typedef unsigned int DistanceType;
-struct path
+
+typedef struct
 {
 	// unsigned to prevent negative numbers
 	DistanceType distance;
 	// int due SRAM limitations, otherwise consuming 32*PATH_ENTRIES bytes
 	int angle;
-};
-
-struct position
-{
-	int x;
-	int y;
-};
+	// map Coordinates optimized using the toMapCoordinate function in 'location'
+	byte mapX;
+	byte mapY;
+} path;
 
 // current ID for the path array
 unsigned int currentPathID = 0;
@@ -87,13 +85,15 @@ unsigned int dodgeCounter = 0;
 void initiateDrive();
 bool setPath(path newPath);
 bool removePath(unsigned int pathID);
-void changePath(unsigned int pathID, unsigned int distance, int angle);
+void changePath(unsigned int pathID, unsigned int distance, int angle, byte mapX, byte mapY);
 void reversePath();
 void scanSurroundings();
 path getClosestPath(path arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
 path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination, unsigned int distanceDriven);
-position toCartesian(path toCoordinate);
+int toCartesian(path pCoordinate, bool useX);
+path toPolar(byte x, byte y);
+path setCoordinates();
 void IRU();
 bool IRM();
 bool IRG();
@@ -164,40 +164,77 @@ void initiateDrive()
 	// whether we've already been there.
 	newPath = getClosestPath(usData, SAMPLES, true);
 
+
 	// Add path to array
 	setPath(newPath);
 
-	// Drive to it
+	path temp = setCoordinates();
+
+	if (getVisits(temp.mapX, temp.mapY) <= INTEREST_THRESHOLD){
+		// If the map hasn't registered the object, add it to the map
+		if (!hasObstacle(temp.mapX, temp.mapY))
+			setObstacle(temp.mapX, temp.mapY);
+		
+		// Add a visit, to make the location less interesting
+		addVisit(temp.mapX, temp.mapY);
+	}
+	else {
+		byte suggestedX = 0, suggestedY = 0;
+		if (getSuggestion(temp.mapX, temp.mapY, &suggestedX, &suggestedY))
+		{
+			// The given location is interesting, we need to head in that location
+
+			// TODO: calculate the given coordinates back to a vector that is drivable from the point the robots are standing now
+		}
+		else {
+			// The given location is not interesting, fallback on some more primitive route changes
+
+			// Thus remove the current path
+			removePath(currentPathID - 1);
+
+			// set a dodging move
+			newPath.angle = 90;
+			newPath.distance = 20;
+
+			// And add to the waypoint library
+			setPath(newPath);
+
+			// Add the coordinates to the added path
+			setCoordinates();
+		}
+	}
+
 
 	Serial.print("Waypoint: ");
 	Serial.print(newPath.distance);
-	Serial.print(" at:  ");
-	Serial.println(newPath.angle);
+	Serial.print(" - ");
+	Serial.print(newPath.angle);
+	Serial.print(" at: (");
+	Serial.print(temp.mapX);
+	Serial.print(", ");
+	Serial.print(temp.mapY);
+	Serial.println(")");
 
-	/*DistanceType drivenDistance = */drive(newPath.distance, newPath.angle);
+	// We'd like to know if the full path has been driven, if not, the last waypoint needs to be changed
+	DistanceType drivenDistance = drive(newPath.distance, newPath.angle);
 	delay(1000);
-	/*if (drivenDistance < newPath.distance)
+
+	// If the driven distance appears to be less than we wanted
+	if (drivenDistance < newPath.distance)
 	{
-		changePath(currentPathID - 1, drivenDistance, 0);
+		// set the changed distance
+		changePath(currentPathID - 1, drivenDistance, NULL, NULL, NULL);
+
+		// then recalculate and change the coordinates
+		path temp = setCoordinates();
+
+		// Set the new obstacle at the position we justed stopped
+		setObstacle(temp.mapX, temp.mapY);
+
 		Serial.print("Changed path length: ");
 		Serial.println(drivenDistance);
-	}*/
-	// Check whether the task completed successfully
-	if (crashed)
-	{
-		/*
-		// Remove the planned direction
-		removePath(currentPathID - 1);
-
-		// Add the quarter turn to the database
-		newPath.angle = 90;
-		newPath.distance = 0;
-		setPath(newPath);
-		*/
-
-		// Crash resolved, setting back the handler
-		crashed = false;
 	}
+
 
 	++loopCounter;
 }
@@ -263,14 +300,20 @@ bool removePath(unsigned int pathID)
 
 // Change a path using the override distance or angle. Default set to 0
 // Can be used to change paths in case of a obstacle
-void changePath(unsigned int pathID, unsigned int distance = 0, int angle = 0)
+void changePath(unsigned int pathID, unsigned int distance = NULL, int angle = NULL, byte mapX = NULL, byte mapY = NULL)
 {
 	// Replace the data if it has been changed
-	if (distance > 0)
+	if (distance >= 0 && distance != NULL)
 		paths[pathID].distance = distance;
 
-	if (angle != 0)
+	if (angle != NULL)
 		paths[pathID].angle = angle;
+
+	if (mapX != NULL)
+		paths[pathID].mapX = mapX;
+
+	if (mapY != NULL)
+		paths[pathID].mapY = mapY;
 }
 
 // Return to the lab by reversing the path array
@@ -554,20 +597,61 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 	return temp;
 }
 
-/*
 // Convert waypoint to coordinates
-position toCartesian(path pCoordinate)
+int toCartesian(path pCoordinate, bool useX)
 {
-	position cPosition;
 	int distance = pCoordinate.distance;
 	unsigned int angle = pCoordinate.angle;
 
 	// Convert polar to coordinates
-	cPosition.x = distance*cos(angle * PI / 180);
-	cPosition.y = distance*sin(angle * PI / 180);
+	if (useX)
+		return round(distance*cos(angle * PI / 180));
+	else 
+		return round(distance*sin(angle * PI / 180));
 
-	return cPosition;
-}*/
+	return 0;
+}
+
+// Convert coordinates to waypoint (starting from the last waypoint
+path toPolar(byte x, byte y)
+{
+	// Set the needed variables
+	path current = paths[currentPathID - 1];
+	DistanceType diffX = 0, diffY = 0;
+
+	path newPath;
+
+	// Determine the offset seen from the current position
+	diffX = current.mapX + x;
+	diffY = current.mapY + y;
+
+	// Calculate the waypoint
+	newPath.distance = round(sqrt(pow(diffX, 2) + pow(diffY, 2)));
+	newPath.angle = round(atan(diffX / diffY) * (180 / PI));
+	newPath.mapX = x;
+	newPath.mapY = y;
+
+	// Return the path
+	return newPath;
+}
+
+// When adding a new path, first add the path using setPath, then call this function to add the coordinates to the array-entry of the path
+// This to improve efficiency when doing map operations
+path setCoordinates()
+{	
+	// Get the coordinates of the new point
+	path temp = shortestPath(0, currentPathID - 1);
+
+	// Calculate the coordinates and add them to the path
+	temp.mapX = toMapCoordinate(toCartesian(temp, true));
+	temp.mapY = toMapCoordinate(toCartesian(temp, false));
+
+	// Add the coordinates to the array entry
+	changePath(currentPathID - 1, NULL, NULL, temp.mapX, temp.mapY);
+
+	// return the path to be able to use the coordinates
+	return temp;
+}
 
 /*UltrasoonUP*/
 void USU(){

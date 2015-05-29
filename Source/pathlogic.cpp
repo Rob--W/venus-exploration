@@ -1,28 +1,14 @@
 #include "pathlogic.h"
 
-// TODO(rob): The next comment is not entirely true, see the comments within the
-// function for the actual behavior.
-// Find the path with the smallest distance (but still larger than SAFE_DISTANCE).
-// arrayData is an ordered list of measurements. If multiple paths have the same
-// distance, then the center of these paths is returned.
 byte getClosestPathIndex(path arrayData[], unsigned int arrayLength,
 		bool min = true) {
 	byte bestLow = 0;
 	byte bestLength = 0;
 	DistanceType extremeDistance = arrayData[0].distance;
 
-	// TODO(rob): What if the distances is smaller than SAFE_DISTANCE?
-	// Marijn said that the function is supposed to ignore paths with a distance
-	// shorter than SAFE_DISTANCE. Should we adapt the next logic to implement
-	// this requirement?
-
-	// The next loop attempts to find the low index and the high index of the
-	// range of extreme (lowest/highest) distances. In the end, the middle of
-	// these values will be returned. For example:
-	// 100, 22, 22, 22, 22, 300
-	//      ^    ^       ^
-	//     low   |      high
-	//      return value (=center among the elements with the minimal distance).
+	// The next loop attempts to finds the longest sequence with the smallest
+	// distance, and returns the position of the middle of this sequence.
+	// (if min == false, then obviously the largest distance is sought).
 	for (unsigned int i = 0; i < arrayLength; ++i) {
 		DistanceType distance = arrayData[i].distance;
 		if (min ? distance > extremeDistance : distance < extremeDistance) {

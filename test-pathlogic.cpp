@@ -49,13 +49,16 @@ void testGetClosestPath() {
     }
 
     {
-        path paths[6];
+        // This is the example from the documentation.
+        path paths[8];
         paths[0].distance = 100;
         paths[1].distance = 22;
         paths[2].distance = 22; // <--
         paths[3].distance = 22;
         paths[4].distance = 22;
         paths[5].distance = 300;
+        paths[6].distance = 22;
+        paths[7].distance = 22;
         EXPECT_EQ(2, getClosestPathIndex(paths, 6, true));
         EXPECT_EQ(5, getClosestPathIndex(paths, 6, false));
     }

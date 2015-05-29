@@ -12,8 +12,13 @@ struct path
 	int angle;
 };
 
-// For testing. Equivalent to arrayData[getClosestPath( ... )]
+// Find the middle index of the longest subsequence. See getClosestPath.
 byte getClosestPathIndex(path arrayData[], unsigned int arrayLength, bool min);
 
-// Use this.
+// Finds the longest sequence with the smallest distance, and returns the
+// path at the middle of this sequence. For example:
+// 100, 22, 22, 22, 22, 300, 22, 22
+//      ^    ^       ^
+//     low   |      high
+//      return value (=center among the elements with the minimal distance).
 path getClosestPath(path arrayData[], unsigned int arrayLength, bool min);

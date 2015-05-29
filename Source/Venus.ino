@@ -2,6 +2,7 @@
 #include <math.h>
 #include <Servo.h>
 #include "softwaredrivers.h"
+#include "pathlogic.h"
 #include "location.h"
 
 // Toggle to enable/disable serial output and debugging
@@ -45,20 +46,6 @@
 #define SAFE_DISTANCE		15				// Offset distance due placement of top/bottom US sensor (stopping distance)
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 
-// Path struct holds basic information about driven paths
-typedef unsigned int DistanceType;
-
-typedef struct
-{
-	// unsigned to prevent negative numbers
-	DistanceType distance;
-	// int due SRAM limitations, otherwise consuming 32*PATH_ENTRIES bytes
-	int angle;
-	// map Coordinates optimized using the toMapCoordinate function in 'location'
-	byte mapX;
-	byte mapY;
-} path;
-
 // current ID for the path array
 unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
@@ -88,7 +75,6 @@ bool removePath(unsigned int pathID);
 void changePath(unsigned int pathID, unsigned int distance, int angle, byte mapX, byte mapY);
 void reversePath();
 void scanSurroundings();
-path getClosestPath(path arrayData[], unsigned int arrayLength, bool min);
 path shortestPath(unsigned int from, unsigned int to);
 path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination, unsigned int distanceDriven);
 int toCartesian(path pCoordinate, bool useX);
@@ -426,44 +412,6 @@ void scanSurroundings()
 	
 	// look straight ahead
 	readUltraTop(90); 
-}
-
-// TODO(rob): The next comment is not entirely true, see the comments within the
-// function for the actual behavior.
-// Find the path with the smallest distance (but still larger than SAFE_DISTANCE).
-// arrayData is an ordered list of measurements. If multiple paths have the same
-// distance, then the center of these paths is returned.
-path getClosestPath(path arrayData[], unsigned int arrayLength, bool min = true)
-{
-	byte low = 0;
-	byte high = 0;
-	DistanceType extremeDistance = arrayData[0].distance;
-
-	// TODO(rob): What if the distances is smaller than SAFE_DISTANCE?
-	// Marijn said that the function is supposed to ignore paths with a distance
-	// shorter than SAFE_DISTANCE. Should we adapt the next logic to implement
-	// this requirement?
-
-	// The next loop attempts to find the low index and the high index of the
-	// range of extreme (lowest/highest) distances. In the end, the middle of
-	// these values will be returned. For example:
-	// 100, 22, 22, 22, 22, 300
-	//      ^    ^       ^
-	//     low   |      high
-	//      return value (=center among the elements with the minimal distance).
-	for (int i = 0; i < arrayLength; ++i) {
-		DistanceType distance = arrayData[i].distance;
-		if (min ? distance < extremeDistance : distance > extremeDistance) {
-			// Found a new extreme (lowest or highest) value.
-			low = i;
-			high = i;
-			extremeDistance = distance;
-		} else if (distance == extremeDistance) {
-			high = i;
-		}
-	}
-
-	return arrayData[low + round((high - low) / 2)];
 }
 
 // Calculate the shortest path between to given points. Returned path is drive ready.

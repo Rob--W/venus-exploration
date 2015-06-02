@@ -77,9 +77,9 @@ void reversePath();
 void scanSurroundings();
 path shortestPath(unsigned int from, unsigned int to);
 path recoverPath(unsigned int startDodge, unsigned int endDodge, path destination, unsigned int distanceDriven);
-int toCartesian(path pCoordinate, bool useX);
+int toCartesian(path pCoordinate, byte index, bool useX);
 path toPolar(byte x, byte y);
-path setCoordinates();
+path getAbsoluteCoordinate();
 void IRU();
 bool IRM();
 bool IRG();
@@ -155,7 +155,7 @@ void initiateDrive()
 	setPath(newPath);
 
 	// Calculate the coordinates from the given array
-	path temp = setCoordinates();
+	path temp = getAbsoluteCoordinate();
 
 	if (getVisits(temp.mapX, temp.mapY) <= INTEREST_THRESHOLD){
 		// If the map hasn't registered the object, add it to the map
@@ -188,9 +188,6 @@ void initiateDrive()
 
 			// And add to the waypoint library
 			setPath(newPath);
-
-			// Add the coordinates to the added path
-			setCoordinates();
 		}
 	}
 
@@ -216,7 +213,7 @@ void initiateDrive()
 		changePath(currentPathID - 1, drivenDistance, NULL, NULL, NULL);
 
 		// then recalculate and change the coordinates
-		path temp = setCoordinates();
+		path temp = getAbsoluteCoordinate();
 
 		// Set the new obstacle at the position we justed stopped
 		setObstacle(temp.mapX, temp.mapY);
@@ -241,6 +238,8 @@ bool setPath(path newPath)
 	// Store in array
 	paths[currentPathID].distance = newPath.distance;
 	paths[currentPathID].angle = newPath.angle;
+	paths[currentPathID].mapX = toCartesian(paths[currentPathID], currentPathID, true);
+	paths[currentPathID].mapY = toCartesian(paths[currentPathID], currentPathID, false);
 
 	// Raise the array counter
 	currentPathID += 1;
@@ -295,11 +294,21 @@ bool removePath(unsigned int pathID)
 void changePath(unsigned int pathID, unsigned int distance = NULL, int angle = NULL, byte mapX = NULL, byte mapY = NULL)
 {
 	// Replace the data if it has been changed
-	if (distance >= 0 && distance != NULL)
+	if (distance >= 0 && distance != NULL) {
 		paths[pathID].distance = distance;
 
-	if (angle != NULL)
+		//Re-calculate the relative coordinates
+		paths[currentPathID].mapX = toCartesian(paths[currentPathID], currentPathID, true);
+		paths[currentPathID].mapY = toCartesian(paths[currentPathID], currentPathID, false);
+	}
+
+	if (angle != NULL) {
 		paths[pathID].angle = angle;
+
+		//Re-calculate the relative coordinates
+		paths[currentPathID].mapX = toCartesian(paths[currentPathID], currentPathID, true);
+		paths[currentPathID].mapY = toCartesian(paths[currentPathID], currentPathID, false);
+	}
 
 	if (mapX != NULL)
 		paths[pathID].mapX = mapX;
@@ -313,14 +322,6 @@ void reversePath()
 {
 	// Some serial checkings...
 	Serial.println("Returning to base: ");
-	for (int i = 0; i < currentPathID; ++i)
-	{
-		Serial.print(i);
-		Serial.print(" - ");
-		Serial.print(paths[i].angle);
-		Serial.print(" - ");
-		Serial.println(paths[i].distance);
-	}
 
 	delay(2000);
 
@@ -342,10 +343,9 @@ void reversePath()
 			delay(1000);
 		}
 		else if (i == 0) {
-			Serial.println("i = 0");
 			Serial.print(paths[i].distance);
 			Serial.print(" - ");
-			Serial.println(0);
+			Serial.println(-paths[i + 1].angle);
 			drive(paths[i].distance, -paths[i+1].angle);
 		}
 		else {
@@ -558,10 +558,14 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 }
 
 // Convert waypoint to coordinates
-int toCartesian(path pCoordinate, bool useX)
+int toCartesian(path pCoordinate, byte index, bool useX)
 {
-	int distance = pCoordinate.distance;
-	unsigned int angle = pCoordinate.angle;
+	unsigned int distance = pCoordinate.distance;
+	int angle = 90;
+
+	// Get the absolute angle 
+	for (int i = 0; i < index + 1; ++i)
+		angle += paths[i].angle;
 
 	// Convert polar to coordinates
 	if (useX)
@@ -597,7 +601,7 @@ path toPolar(byte x, byte y)
 
 // When adding a new path, first add the path using setPath, then call this function to add the coordinates to the array-entry of the path
 // This to improve efficiency when doing map operations
-path setCoordinates()
+path getAbsoluteCoordinate()
 {
 	int pathX = 0, pathY = 0;
 	// Add the current known coordinates
@@ -608,18 +612,19 @@ path setCoordinates()
 	}
 
 	// Add the known coordinates of the last point
-	pathX += toCartesian(paths[currentPathID - 1], true);
-	pathY += toCartesian(paths[currentPathID - 1], false);
+	pathX += toCartesian(paths[currentPathID - 1], (currentPathID - 1), true);
+	pathY += toCartesian(paths[currentPathID - 1], (currentPathID - 1), false);
 
-	// Calculate the coordinates and add them to the path
-	paths[currentPathID - 1].mapX = toMapCoordinate(pathX);
-	paths[currentPathID - 1].mapY = toMapCoordinate(pathY);
+	path temp;
 
-	// Add the coordinates to the array entry
-	changePath(currentPathID - 1, NULL, NULL, paths[currentPathID - 1].mapX, paths[currentPathID - 1].mapY);
+	temp.mapX = pathX;
+	temp.mapY = pathY;
+	temp.angle = NULL;
+	temp.distance = NULL;
+
 
 	// return the path to be able to use the coordinates
-	return paths[currentPathID - 1];
+	return temp;
 }
 
 /*UltrasoonUP*/

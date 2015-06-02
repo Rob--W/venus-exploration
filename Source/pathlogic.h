@@ -3,6 +3,7 @@ typedef unsigned char byte;
 
 // unsigned to prevent negative numbers
 typedef unsigned int DistanceType;
+typedef signed char Coordinate;
 
 // Path struct holds basic information about driven paths
 struct path
@@ -11,8 +12,8 @@ struct path
 	// int due SRAM limitations, otherwise consuming 32*PATH_ENTRIES bytes
 	int angle;
 	// map Coordinates optimized using the toMapCoordinate function in 'location'
-	byte mapX;
-	byte mapY;
+	Coordinate mapX;
+	Coordinate mapY;
 };
 
 // Find the middle index of the longest subsequence. See getClosestPath.

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <iostream>
+#include <stdlib.h>
 #include <math.h>
 #include "Serial.h"
 #include "softwaredrivers.h"

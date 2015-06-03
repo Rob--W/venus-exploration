@@ -1,39 +1,14 @@
-#include "Arduino.h"
+#include <stdio.h>
+#include <iostream>
 #include <math.h>
-#include <Servo.h>
+#include "Serial.h"
 #include "softwaredrivers.h"
 #include "pathlogic.h"
 #include "location.h"
 
-// Toggle to enable/disable serial output and debugging
-// NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
-// REDUCING FILESIZES AND SRAM USAGE
-#define DEBUG true				
-#define Serial if(DEBUG)Serial
 
 
-// NOTE
-// Everything which has been given in degrees, uses a rotated polar system as reference:
-//
-//                                0
-//
-//                              o ^ o 
-//                           o    |    o  
-//                      +90 o     |     o -90
-//                          o     |     o 
-//                           o    |    o 
-//                              o   o
-//
-//                              +/-180
-//
-// It is not efficient to turn more than 180 degrees
-
-
-
-// Things that must be included in other parts:
-// - Set latestBaseIndex to the the currentIndex when restarting from the base
-// - Use ShortestDistance to get back on track when driving around a cliff
-// - New waypoints needs to be checked in the matrix
+using namespace std;
 
 // ----------------------------------------------------------
 // VARIABLE DECLARATION
@@ -66,6 +41,11 @@ unsigned int latestBaseIndex = 0;
 unsigned int startDodge = 0;
 unsigned int dodgeCounter = 0;
 
+// DEBUGGING VARIABLES
+path inputData[5];
+
+_Serial Serial;
+
 // ----------------------------------------------------------
 // PROTOTYPES
 // ----------------------------------------------------------
@@ -90,29 +70,33 @@ bool One();
 
 void dodge(unsigned int distance, int angle);
 
-// ----------------------------------------------------------
-// FUNCTIONS
-// ----------------------------------------------------------
+int main() {
+	cout << "VENUS test" << endl;
 
-// Initiating Arduino hardware and serial communications
-void setup()
-{
-	// Initiate serial communications
-	Serial.begin(9600);
+	inputData[0].angle = 0;
+	inputData[0].distance = 60;
+
+	inputData[1].angle = 90;
+	inputData[1].distance = 60;
+
+	inputData[2].angle = 90;
+	inputData[2].distance = 60;
+
+	inputData[3].angle = 90;
+	inputData[3].distance = 60;
+
+	inputData[4].angle = 90;
+	inputData[4].distance = 60;
+
+	while (true)
+	{
+		initiateDrive();
+	}
 	
-	startSetup();
 
-	stop();
-	delay(1000);
-}
-
-// Main program loop
-void loop()
-{
-	// Start the strategy
-	initiateDrive();
 
 }
+
 
 // Routine for the obstacle functions and things that needs to be handled
 // during the driving procedure
@@ -134,7 +118,7 @@ void initiateDrive()
 	// We're standing on the lab, not knowing in which direction
 	//if (labLightVisible() == true)
 	//	drive(0, 180);
-	
+
 	// Gain information using the top US-sensor
 	if (loopCounter > 3) {
 		reversePath();
@@ -142,6 +126,7 @@ void initiateDrive()
 	}
 
 	// Start scanning with top US-sensor
+#if 0
 	scanSurroundings();
 
 	// Set a new path to the closest detected object.
@@ -149,7 +134,8 @@ void initiateDrive()
 	// Must be extended using the padding matrix to determine
 	// whether we've already been there.
 	newPath = getClosestPath(usData, SAMPLES, true);
-
+#endif
+	newPath = inputData[loopCounter];
 
 	// Add path to array
 	setPath(newPath);
@@ -161,7 +147,7 @@ void initiateDrive()
 		// If the map hasn't registered the object, add it to the map
 		if (!hasObstacle(temp.mapX, temp.mapY))
 			setObstacle(temp.mapX, temp.mapY);
-		
+
 		// Add a visit, to make the location less interesting
 		addVisit(temp.mapX, temp.mapY);
 	}
@@ -212,7 +198,7 @@ void initiateDrive()
 		// set the changed distance
 		changePath(currentPathID - 1, drivenDistance, NULL, NULL, NULL);
 
-		// then recalculate and change the coordinates
+		// then get the new absolute coordinate for the mapping
 		path temp = getAbsoluteCoordinate();
 
 		// Set the new obstacle at the position we justed stopped
@@ -280,7 +266,7 @@ bool removePath(unsigned int pathID)
 			paths[i + pathID] = paths[i + pathID + 1];
 			paths[i + pathID + 1] = temp;
 		}
-		
+
 		// And substract one from the arraycounter for the next addition
 		--currentPathID;
 	}
@@ -297,17 +283,18 @@ void changePath(unsigned int pathID, unsigned int distance = NULL, int angle = N
 	if (distance >= 0 && distance != NULL) {
 		paths[pathID].distance = distance;
 
-		//Re-calculate the relative coordinates
-		paths[currentPathID].mapX = toCartesian(paths[currentPathID], currentPathID, true);
-		paths[currentPathID].mapY = toCartesian(paths[currentPathID], currentPathID, false);
+		// Re-calculate the relative coordinates
+		paths[pathID].mapX = toCartesian(paths[pathID], pathID, true);
+		paths[pathID].mapY = toCartesian(paths[pathID], pathID, false);
 	}
 
-	if (angle != NULL) {
+	if (angle != NULL)
+	{
 		paths[pathID].angle = angle;
 
-		//Re-calculate the relative coordinates
-		paths[currentPathID].mapX = toCartesian(paths[currentPathID], currentPathID, true);
-		paths[currentPathID].mapY = toCartesian(paths[currentPathID], currentPathID, false);
+		// Re-calculate the relative coordinates
+		paths[pathID].mapX = toCartesian(paths[pathID], pathID, true);
+		paths[pathID].mapY = toCartesian(paths[pathID], pathID, false);
 	}
 
 	if (mapX != NULL)
@@ -322,6 +309,7 @@ void reversePath()
 {
 	// Some serial checkings...
 	Serial.println("Returning to base: ");
+
 
 	delay(2000);
 
@@ -345,13 +333,13 @@ void reversePath()
 		else if (i == 0) {
 			Serial.print(paths[i].distance);
 			Serial.print(" - ");
-			Serial.println(-paths[i + 1].angle);
-			drive(paths[i].distance, -paths[i+1].angle);
+			Serial.println(-paths[i+1].angle);
+			drive(paths[i].distance, -paths[i + 1].angle);
 		}
 		else {
 			Serial.print(paths[i].distance);
 			Serial.print(" - ");
-			Serial.println(-paths[i+1].angle);
+			Serial.println(-paths[i + 1].angle);
 			drive(paths[i].distance, -paths[i + 1].angle);
 		}
 
@@ -371,7 +359,7 @@ void reversePath()
 
 // Compute desired angles for the top US-sensor and store the measured data so that it can be used by other functions
 void scanSurroundings()
-{	
+{
 	// Set the sensor to the right
 	readUltraTop(-90 + USSERVO_OFFSET);
 
@@ -387,7 +375,7 @@ void scanSurroundings()
 		angleStep = 30;
 	else
 		angleStep = 180 / (SAMPLES - 1);
-	
+
 	// gather the samples
 	for (int i = 0; i < SAMPLES; ++i)
 	{
@@ -415,9 +403,9 @@ void scanSurroundings()
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
 	}
-	
+
 	// look straight ahead
-	readUltraTop(90); 
+	readUltraTop(90);
 }
 
 // Calculate the shortest path between to given points. Returned path is drive ready.
@@ -513,7 +501,7 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 	path simplifiedDodge = shortestPath(startDodge, endDodge);
 	path temp;
 	// Then calculate the required changes in angle and distance to the destination using the simplified path
-	
+
 	// First determine the projections of the dodge move
 	int angle = 0;
 	int pathX, pathY;
@@ -525,9 +513,9 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 
 	// We need the other part of the angle
 	angle = (invert * 90) - simplifiedDodge.angle;
-	
+
 	// Determine the cartesian projection
-	pathX = round(-1 * invert * simplifiedDodge.distance * cos(angle * PI / 180)); 
+	pathX = round(-1 * invert * simplifiedDodge.distance * cos(angle * PI / 180));
 	pathY = round(simplifiedDodge.distance * sin(angle * PI / 180));
 
 	// Assume we have the driven distance until the stop
@@ -562,15 +550,15 @@ int toCartesian(path pCoordinate, byte index, bool useX)
 {
 	unsigned int distance = pCoordinate.distance;
 	int angle = 90;
+	
 
-	// Get the absolute angle 
 	for (int i = 0; i < index + 1; ++i)
 		angle += paths[i].angle;
 
 	// Convert polar to coordinates
 	if (useX)
 		return round(distance*cos(angle * PI / 180));
-	else 
+	else
 		return round(distance*sin(angle * PI / 180));
 
 	return 0;
@@ -622,10 +610,11 @@ path getAbsoluteCoordinate()
 	temp.angle = NULL;
 	temp.distance = NULL;
 
-
 	// return the path to be able to use the coordinates
 	return temp;
 }
+
+
 
 /*UltrasoonUP*/
 void USU(){
@@ -676,31 +665,32 @@ void USD(){
 
 /*IRUnder*/
 void IRU(){
-	int counter = 0;
-	if (readIRLB() || readIRRB() < 15){
-		stop();												//car stops, because end of the world or a cliff
-		if (readUltraTop > 0){
-			drive(readUltraTop(USSERVO_OFFSET), 0);
-		}
-		else{												//no new point found
-			drive(5, 90);									//drive 5cm to the right
-			drive(0, -90);									//drive back to the left
-			drive(/*shortestpath functie*/0, 0);
-		}
-		if (readIRLB() || readIRRB() > 100 && readIRLB() || readIRRB() < 240){
-			if (counter > 0){								//count grey stripes
-				openGrabber();								//drop the stone
-				counter = 0;
-				//reverse(25);
-			}
-			else{											//i can count grey stripes
-				++counter;
-			}
-		}
-		else{
-			counter = 0;
-		}
-	}
+
+	//int counter = 0;
+	//if (readIRLB() || readIRRB() < 15){
+	//	stop();												//car stops, because end of the world or a cliff
+	//	if (readUltraTop > 0){
+	//		drive(readUltraTop(USSERVO_OFFSET), 0);
+	//	}
+	//	else{												//no new point found
+	//		drive(5, 90);									//drive 5cm to the right
+	//		drive(0, -90);									//drive back to the left
+	//		drive(0, 0);
+	//	}
+	//	if (readIRLB() || readIRRB() > 100 && readIRLB() || readIRRB() < 240){
+	//		if (counter > 0){								//count grey stripes
+	//			openGrabber();								//drop the stone
+	//			counter = 0;
+	//			//reverse(25);
+	//		}
+	//		else{											//i can count grey stripes
+	//			++counter;
+	//		}
+	//	}
+	//	else{
+	//		counter = 0;
+	//	}
+	//}
 }
 /*IRMmid*/
 bool IRM(){
@@ -715,6 +705,8 @@ bool IRM(){
 		stop();							//stop
 		USD();							//so what did i see
 	}
+
+	return false;
 }
 
 /*IRGrabber*/
@@ -732,6 +724,8 @@ bool IRG(){
 		stop();							//stop
 		IRG();							//drive further
 	}
+
+	return false;
 }
 
 bool One(){

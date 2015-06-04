@@ -50,8 +50,6 @@
 unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
 path usData[SAMPLES] = { NULL };
-//Ultrasonic Sensor down
-unsigned int usDown;
 
 // Crash handling variable
 bool crashed = false;
@@ -82,13 +80,13 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 int toCartesian(path pCoordinate, byte index, bool useX);
 path toPolar(byte x, byte y);
 path getAbsoluteCoordinate();
-void IRU();												//Infrarood sensor down protocol for every scenario
-bool IRM();												//Infrarood sensor mid(so left and right) protocol for every scenario
-bool IRG();												//Infrarood sensor ground protocol for every scenario
-void light();											//light sensor protocol for every scenario
-void USU();												
+void IRU();
+bool IRM();
+bool IRG();
+void light();
+void USU();
 void USD();
-bool One();												//the ONE and only safe distance check
+bool One();
 
 void dodge(unsigned int distance, int angle);
 
@@ -151,18 +149,10 @@ void initiateDrive()
 	// Must be extended using the padding matrix to determine
 	// whether we've already been there.
 	newPath = getClosestPath(usData, SAMPLES, true);
-	if (newPath.angle = 0 && newPath.distance > usDown){
-		//New path to the closest distance, which has been given by the ultrasone down
-		path downPath;
-		downPath.angle = 0;
-		downPath.distance = usDown;
-		setPath(downPath);
-	}
-	else{
 
-		// Add path to array
-		setPath(newPath);
-	}
+
+	// Add path to array
+	setPath(newPath);
 
 	// Calculate the coordinates from the given array
 	path temp = getAbsoluteCoordinate();
@@ -171,7 +161,7 @@ void initiateDrive()
 		// If the map hasn't registered the object, add it to the map
 		if (!hasObstacle(temp.mapX, temp.mapY))
 			setObstacle(temp.mapX, temp.mapY);
-
+		
 		// Add a visit, to make the location less interesting
 		addVisit(temp.mapX, temp.mapY);
 	}
@@ -200,7 +190,6 @@ void initiateDrive()
 			setPath(newPath);
 		}
 	}
-
 
 
 	Serial.print("Waypoint: ");
@@ -425,11 +414,6 @@ void scanSurroundings()
 
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
-		//If above Ultrasone has an angle of zero scan with the down Ultrasone
-		if (angle = 90){
-			usDown = readUltraBot();
-			
-		}
 	}
 	
 	// look straight ahead
@@ -718,7 +702,7 @@ void IRU(){
 		}
 	}
 }
-/*IRMid*/
+/*IRMmid*/
 bool IRM(){
 	if (readIRMid() == 1){
 		drive(5, 0);
@@ -751,7 +735,7 @@ bool IRG(){
 }
 
 bool One(){
-	if (readUltraTop(USSERVO_OFFSET) < SAFE_DISTANCE || usDown < SAFE_DISTANCE){
+	if (readUltraTop(USSERVO_OFFSET) < SAFE_DISTANCE){
 		Serial.println("Stop");
 		stop();
 		delay(1000);

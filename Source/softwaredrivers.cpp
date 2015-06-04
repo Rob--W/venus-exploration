@@ -321,11 +321,11 @@ int readUltraBot()
 	// convert the time into a distance
 	cm = microsecondsToCentimeters(duration);
 
-	Serial.print(inches);
-	Serial.print("in, ");
-	Serial.print(cm);
-	Serial.print("cm");
-	Serial.println();
+	//Serial.print(inches);
+	//Serial.print("in, ");
+	//Serial.print(cm);
+	//Serial.print("cm");
+	//Serial.println();
 
 	delay(100);
 	return cm;

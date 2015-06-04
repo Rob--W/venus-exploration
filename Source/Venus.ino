@@ -45,6 +45,7 @@
 #define PI					3.14159265359	// Obviously
 #define USSERVO_OFFSET		90				// Offset in the data for the top servo
 #define SAFE_DISTANCE		15				// Offset distance due placement of top/bottom US sensor (stopping distance)
+#define ROCK_RANGE			10				// Range in which the gripper is able to grab the rock
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 #define DODGE_ANGLE			-90				// Angle in which the robot should turn for a cliff
 #define DODGE_DISTANCE		15				// Distance the robot should drive each dodge move
@@ -53,7 +54,7 @@
 unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
 path usData[SAMPLES] = { NULL };
-
+byte usDown = 0;
 // Crash handling variable
 bool crashed = false;
 
@@ -68,6 +69,11 @@ unsigned int latestBaseIndex = 0;
 // Dodge counter
 unsigned int startDodge = 0;
 unsigned int dodgeCounter = 0;
+
+// State variables
+bool grabberOpen = false;
+bool holdsRock = false;
+bool foundRock = false;
 
 enum crash {
 	NONE,
@@ -114,6 +120,7 @@ void setup()
 	startSetup();
 
 	stop();
+	openGrabber();
 	delay(1000);
 }
 
@@ -122,7 +129,6 @@ void loop()
 {
 	// Start the strategy
 	initiateDrive();
-
 }
 
 // Routine for the obstacle functions and things that needs to be handled
@@ -154,6 +160,14 @@ void initiateDrive()
 		while (true){}
 	}
 
+	if (readUltraBot() < ROCK_RANGE)
+	{
+		closeGrabber();
+	}
+	else
+	{
+		openGrabber();
+	}
 	// Start scanning with top US-sensor
 	scanSurroundings();
 
@@ -163,6 +177,15 @@ void initiateDrive()
 	// whether we've already been there.
 	newPath = getClosestPath(usData, SAMPLES, true);
 
+	bool foundRock = false;
+
+	if (newPath.distance > usDown)
+	{
+		newPath.distance = usDown;
+		newPath.angle = 0;
+		Serial.println("Rock found!");
+		foundRock = true;
+	}
 	// Add path to array
 	setPath(newPath);
 
@@ -411,6 +434,13 @@ void scanSurroundings()
 	for (int i = 0; i < SAMPLES; ++i)
 	{
 		usData[i].angle = angle;
+		if (angle == USSERVO_OFFSET)
+		{
+			usDown = readUltraBot();
+			Serial.print("Bottom: ");
+			Serial.println(usDown);
+		}
+
 		int distance = readUltraTop(angle + 90);
 
 		// Make objects which are too close uninteresting by setting the distance to max

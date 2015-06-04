@@ -217,6 +217,7 @@ void initiateDrive()
 
 	// We'd like to know if the full path has been driven, if not, the last waypoint needs to be changed
 	DistanceType drivenDistance = drive(newPath.distance, newPath.angle);
+	Serial.println(drivenDistance);
 	delay(1000);
 
 	// If the driven distance appears to be less than we wanted
@@ -756,12 +757,6 @@ bool One(){
 	if (readUltraTop(USSERVO_OFFSET) < SAFE_DISTANCE){
 		Serial.println("Stop");
 		stop();
-		delay(1000);
-		drive(0, 90);
-		path dodge;
-		dodge.distance = 0;
-		dodge.angle = 90;
-		setPath(dodge);
 		delay(1000);
 		return false;
 	}

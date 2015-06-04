@@ -4,6 +4,7 @@
 #include "softwaredrivers.h"
 #include "pathlogic.h"
 #include "location.h"
+#include "XBeeCommunication.h"
 
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED

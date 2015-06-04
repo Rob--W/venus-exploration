@@ -12,7 +12,7 @@ void xBeeBroadcast(byte X, byte Y, byte status)
 		delay(1);
 	}
 
-	if (xBeeAvailable)
+	if (xBeeAvailable())
 	{
 		a = xBeeRead(a);
 		b = xBeeRead(b);

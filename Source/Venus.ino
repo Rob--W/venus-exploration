@@ -75,6 +75,7 @@ enum crash {
 	IR_DOWN
 } crashCause;
 
+
 // ----------------------------------------------------------
 // PROTOTYPES
 // ----------------------------------------------------------
@@ -99,7 +100,6 @@ bool One();
 
 void dodge(unsigned int distance, int angle);
 path dodgeCliff(unsigned int drivenDistance);
-
 // ----------------------------------------------------------
 // FUNCTIONS
 // ----------------------------------------------------------
@@ -120,9 +120,7 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	//initiateDrive();
-	scanSurroundings();
-
+	initiateDrive();
 
 }
 
@@ -136,7 +134,6 @@ bool checkObstacles()
 		crashCause = US_TOP;			// Collission detected!
 		crashed = true;
 	}
-
 	// Return true when everything is ok
 	return crashed;
 }
@@ -227,25 +224,21 @@ void initiateDrive()
 		// Get the cause of crash
 		switch (crashCause)
 		{
-			case NONE:
-				// ---
-				break;
-			case US_TOP:
-				dodgeCliff(drivenDistance);
-				crashCause = NONE;
-				break;
-			case US_DOWN:
-				// ---
-				break;
-			case IR_DOWN:
-				dodgeCliff(drivenDistance);
-				crashCause = NONE;
-				break;
+		case NONE:
+			// ---
+			break;
+		case US_TOP:
+			dodgeCliff(drivenDistance);
+			crashCause = NONE;
+			break;
+		case US_DOWN:
+			// ---
+			break;
+		case IR_DOWN:
+			dodgeCliff(drivenDistance);
+			crashCause = NONE;
+			break;
 		}
-			
-
-		Serial.print("Changed path length: ");
-		Serial.println(drivenDistance);
 	}
 
 
@@ -438,7 +431,6 @@ void scanSurroundings()
 
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
-
 	}
 	
 	// look straight ahead
@@ -854,3 +846,4 @@ path dodgeCliff(unsigned int distanceDriven)
 	// And return the new path, so that it can be used to drive to
 	return temp;
 }
+

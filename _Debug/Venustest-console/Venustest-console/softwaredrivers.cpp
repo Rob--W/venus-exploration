@@ -33,7 +33,7 @@ int drive(unsigned int distance, int angle)
 		PRight(abs(angle) * round(555.0 / 90));
 	} 
 
-	return 30;// FForward(distance * round(2000.0 / 30));
+	return FForward(distance * round(2000.0 / 30));
 }
 
 // Full speed forward

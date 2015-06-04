@@ -3,7 +3,7 @@ typedef unsigned char byte;
 
 // unsigned to prevent negative numbers
 typedef unsigned int DistanceType;
-typedef signed char Coordinate;
+typedef signed short Coordinate;
 
 // Path struct holds basic information about driven paths
 struct path

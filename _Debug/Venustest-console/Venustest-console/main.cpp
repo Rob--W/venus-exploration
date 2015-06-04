@@ -20,7 +20,9 @@ using namespace std;
 #define PI					3.14159265359	// Obviously
 #define USSERVO_OFFSET		90				// Offset in the data for the top servo
 #define SAFE_DISTANCE		15				// Offset distance due placement of top/bottom US sensor (stopping distance)
-#define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
+#define INTEREST_THRESHOLD  0				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
+#define DODGE_ANGLE			-90				// Angle in which the robot should turn for a cliff
+#define DODGE_DISTANCE		15				// Distance the robot should drive each dodge move
 
 // current ID for the path array
 unsigned int currentPathID = 0;
@@ -70,28 +72,41 @@ void USD();
 bool One();
 
 void dodge(unsigned int distance, int angle);
+path dodgeCliff(unsigned int distanceDriven);
 
 int main() {
 	cout << "VENUS test" << endl;
 
 	inputData[0].angle = 0;
-	inputData[0].distance = 60;
+	inputData[0].distance = 80;
 
-	inputData[1].angle = 90;
-	inputData[1].distance = 60;
+	path kutFernanddos;
 
-	inputData[2].angle = 90;
-	inputData[2].distance = 60;
+	kutFernanddos.angle = 45;
+	kutFernanddos.distance = 40;
 
-	inputData[3].angle = 90;
-	inputData[3].distance = 60;
+	setPath(kutFernanddos);
 
-	inputData[4].angle = 90;
-	inputData[4].distance = 60;
+	inputData[1].angle = -90;
+	inputData[1].distance = 40;
+
+	inputData[2].angle = -90;
+	inputData[2].distance = 40;
+
+	inputData[3].angle = -90;
+	inputData[3].distance = 40;
+
+	inputData[4].angle = 180;
+	inputData[4].distance = 40;
+
+
+	setPath(dodgeCliff(40));
+
+
 
 	while (true)
 	{
-		initiateDrive();
+		//initiateDrive();
 	}
 	
 
@@ -121,7 +136,7 @@ void initiateDrive()
 	//	drive(0, 180);
 
 	// Gain information using the top US-sensor
-	if (loopCounter > 3) {
+	if (loopCounter > 0) {
 		reversePath();
 		while (true){}
 	}
@@ -144,20 +159,20 @@ void initiateDrive()
 	// Calculate the coordinates from the given array
 	path temp = getAbsoluteCoordinate();
 
-	if (getVisits(temp.mapX, temp.mapY) <= INTEREST_THRESHOLD){
+	if (getVisits(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)) <= INTEREST_THRESHOLD){
 		// If the map hasn't registered the object, add it to the map
-		if (!hasObstacle(temp.mapX, temp.mapY))
-			setObstacle(temp.mapX, temp.mapY);
+		if (!hasObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)))
+			setObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
 
 		// Add a visit, to make the location less interesting
-		addVisit(temp.mapX, temp.mapY);
+		addVisit(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
 	}
 	else {
 		// Create variables where getSuggestion can store the results in
 		byte suggestedX = 0, suggestedY = 0;
 
 		// Check whether there is a direction which could be interesting
-		if (getSuggestion(temp.mapX, temp.mapY, &suggestedX, &suggestedY))
+		if (getSuggestion(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY), &suggestedX, &suggestedY))
 		{
 			// The given location is interesting, we need to head in that location
 
@@ -194,21 +209,23 @@ void initiateDrive()
 	delay(1000);
 
 	// If the driven distance appears to be less than we wanted
+	path dodge;
+
 	if (drivenDistance < newPath.distance)
 	{
-		// set the changed distance
-		changePath(currentPathID - 1, drivenDistance, NULL, NULL, NULL);
+		do {
+			dodge = dodgeCliff(drivenDistance);
+		} while (drive(dodge.distance, dodge.angle) < dodge.distance);
 
-		// then get the new absolute coordinate for the mapping
-		path temp = getAbsoluteCoordinate();
-
-		// Set the new obstacle at the position we justed stopped
-		setObstacle(temp.mapX, temp.mapY);
-		// And add a visit
-		addVisit(temp.mapX, temp.mapY);
-
-		Serial.print("Changed path length: ");
-		Serial.println(drivenDistance);
+		Serial.print("- Revised waypoint: ");
+		Serial.print(paths[currentPathID - 1].distance);
+		Serial.print(" - ");
+		Serial.print(paths[currentPathID - 1].angle);
+		Serial.print(" at: (");
+		Serial.print(temp.mapX);
+		Serial.print(", ");
+		Serial.print(temp.mapY);
+		Serial.println(")");
 	}
 
 
@@ -243,6 +260,8 @@ bool removePath(unsigned int pathID)
 		--currentPathID;
 		paths[currentPathID].distance = 0;
 		paths[currentPathID].angle = 0;
+		paths[currentPathID].mapX = 0;
+		paths[currentPathID].mapY = 0;
 	}
 	else {
 		// We want to delete a path somewhere in between
@@ -255,6 +274,8 @@ bool removePath(unsigned int pathID)
 		// Empty the indexed slot
 		paths[pathID].distance = 0;
 		paths[pathID].angle = 0;
+		paths[pathID].mapX = 0;
+		paths[pathID].mapY = 0;
 
 		path temp;
 
@@ -734,11 +755,7 @@ bool One(){
 		Serial.println("Stop");
 		stop();
 		delay(1000);
-		drive(0, 90);
-		path dodge;
-		dodge.distance = 0;
-		dodge.angle = 90;
-		setPath(dodge);
+		dodge(DODGE_DISTANCE, DODGE_ANGLE);
 		delay(1000);
 		return false;
 	}
@@ -770,4 +787,49 @@ void dodge(unsigned int distance, int angle)
 	// Execute the movement
 	drive(dodge.distance, dodge.angle);
 
+}
+
+path dodgeCliff(unsigned int distanceDriven)
+{
+	// First set the first move
+	path dodge, destination, temp;
+	dodge.angle = DODGE_ANGLE;
+	dodge.distance = DODGE_DISTANCE;
+
+	// Remember the place we want to go to
+	destination = paths[currentPathID - 1];
+
+	// Assume we have the driven distance until the stop
+	// Then calculate the driven part of the route 
+	temp.distance = distanceDriven;
+
+	// Calculate the remaining distance we should have driven
+	int remainingDistance = destination.distance - temp.distance;
+
+	// Remove it from the array
+	removePath(currentPathID - 1);
+	// Add the point again
+	destination.distance = distanceDriven;
+	setPath(destination);
+
+	// Set the movement in the array
+	setPath(dodge);
+
+	dodge.mapX = paths[currentPathID - 1].mapX;
+	dodge.mapY = paths[currentPathID - 1].mapY;
+
+	// Drive the dodge 
+	DistanceType dodgeDriven = drive(dodge.distance, dodge.angle);
+
+	// The angle of the new vector is determined by the x-offset
+	temp.angle = 180 - round(atan((float)remainingDistance / (float)dodge.mapX) * (float)(180 / PI));
+
+	// Then recalculate the distance to the endpoint
+	temp.distance = round(sqrt(pow(dodge.mapX, 2) + pow(remainingDistance, 2)));
+
+	// Set the newly calculated path
+	setPath(temp);
+
+	// And return the new path, so that it can be used to drive to
+	return temp;
 }

@@ -159,9 +159,9 @@ bool getSuggestion(byte x, byte y, byte* targetX, byte* targetY) {
 }
 
 byte toMapCoordinate(int position) {
-    return position;
+    return position/10 + 20;
 }
 
 int fromMapCoordinate(byte coordinate) {
-    return coordinate;
+    return coordinate*10 - 200;
 }

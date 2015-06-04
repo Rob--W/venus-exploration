@@ -180,9 +180,9 @@ int FForward(int distanceDelay) {
 			//IRscan;
 			//Mappen;
 			//Ultratopread
-			if (checkObstacles() == true){
-				stop();
-			}
+			if (checkObstacles())
+				break;
+			
 			//Spakentellen/Count spokes to find the distance traveled (approximately
 			if (digitalRead(rightencoder) != prevpulse){
 				prevpulse = !prevpulse;

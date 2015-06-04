@@ -45,6 +45,7 @@
 #define PI					3.14159265359	// Obviously
 #define USSERVO_OFFSET		90				// Offset in the data for the top servo
 #define SAFE_DISTANCE		15				// Offset distance due placement of top/bottom US sensor (stopping distance)
+#define SAFE_ROCK_DISTANCE	10				// Offset from where the robot must stop to get the rock within grabber range
 #define ROCK_RANGE			10				// Range in which the gripper is able to grab the rock
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 #define DODGE_ANGLE			-90				// Angle in which the robot should turn for a cliff
@@ -150,10 +151,6 @@ void initiateDrive()
 {
 	path newPath;
 
-	// We're standing on the lab, not knowing in which direction
-	//if (labLightVisible() == true)
-	//	drive(0, 180);
-	
 	// Gain information using the top US-sensor
 	if (loopCounter > 3) {
 		reversePath();
@@ -162,10 +159,12 @@ void initiateDrive()
 
 	if (readUltraBot() < ROCK_RANGE)
 	{
+		grabberOpen = false;
 		closeGrabber();
 	}
 	else
 	{
+		grabberOpen = true;
 		openGrabber();
 	}
 	// Start scanning with top US-sensor
@@ -175,55 +174,61 @@ void initiateDrive()
 	// (set the last parameter to false to gain the max value)
 	// Must be extended using the padding matrix to determine
 	// whether we've already been there.
-	newPath = getClosestPath(usData, SAMPLES, true);
-
-	bool foundRock = false;
-
-	if (newPath.distance > usDown)
+	if (foundRock)
 	{
 		newPath.distance = usDown;
 		newPath.angle = 0;
 		Serial.println("Rock found!");
-		foundRock = true;
 	}
+	else {
+		newPath = getClosestPath(usData, SAMPLES, true);
+	}
+
 	// Add path to array
 	setPath(newPath);
 
 
 	// Calculate the coordinates from the given array
 	path temp = getAbsoluteCoordinate();
-
-	if (getVisits(temp.mapX, temp.mapY) <= INTEREST_THRESHOLD){
-		// If the map hasn't registered the object, add it to the map
-		if (!hasObstacle(temp.mapX, temp.mapY))
-			setObstacle(temp.mapX, temp.mapY);
-		
-		// Add a visit, to make the location less interesting
-		addVisit(temp.mapX, temp.mapY);
+	if (foundRock)
+	{
+		// Apparently we've found a rock
+		addRock(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
+		addVisit(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
 	}
 	else {
-		// Create variables where getSuggestion can store the results in
-		byte suggestedX = 0, suggestedY = 0;
+		if (getVisits(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)) <= INTEREST_THRESHOLD){
+			// If the map hasn't registered the object, add it to the map
+			if (!hasObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)))
+				setObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
 
-		// Check whether there is a direction which could be interesting
-		if (getSuggestion(temp.mapX, temp.mapY, &suggestedX, &suggestedY))
-		{
-			// The given location is interesting, we need to head in that location
-
-			// TODO: calculate the given coordinates back to a vector that is drivable from the point the robots are standing now
+			// Add a visit, to make the location less interesting
+			addVisit(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
 		}
 		else {
-			// The given location is not interesting, fallback on some more primitive route changes
+			// Create variables where getSuggestion can store the results in
+			byte suggestedX = 0, suggestedY = 0;
 
-			// Thus remove the current path
-			removePath(currentPathID - 1);
+			// Check whether there is a direction which could be interesting
+			if (getSuggestion(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY), &suggestedX, &suggestedY))
+			{
+				// The given location is interesting, we need to head in that location
 
-			// set a dodging move
-			newPath.angle = 90;
-			newPath.distance = 20;
+				// TODO: calculate the given coordinates back to a vector that is drivable from the point the robots are standing now
+			}
+			else {
+				// The given location is not interesting, fallback on some more primitive route changes
 
-			// And add to the waypoint library
-			setPath(newPath);
+				// Thus remove the current path
+				removePath(currentPathID - 1);
+
+				// set a dodging move
+				newPath.angle = 90;
+				newPath.distance = 20;
+
+				// And add to the waypoint library
+				setPath(newPath);
+			}
 		}
 	}
 
@@ -264,6 +269,8 @@ void initiateDrive()
 			crashCause = NONE;
 			break;
 		}
+
+
 	}
 
 
@@ -414,6 +421,8 @@ void reversePath()
 // Compute desired angles for the top US-sensor and store the measured data so that it can be used by other functions
 void scanSurroundings()
 {	
+	foundRock = false;
+
 	// Set the sensor to the right
 	readUltraTop(-90 + USSERVO_OFFSET);
 
@@ -436,7 +445,7 @@ void scanSurroundings()
 		usData[i].angle = angle;
 		if (angle == USSERVO_OFFSET)
 		{
-			usDown = readUltraBot();
+			usDown = readUltraBot() - SAFE_ROCK_DISTANCE;
 			Serial.print("Bottom: ");
 			Serial.println(usDown);
 		}
@@ -458,6 +467,9 @@ void scanSurroundings()
 		Serial.println(distance);
 
 		usData[i].distance = distance;
+
+		if (usDown < (distance + SAFE_DISTANCE) && angle == USSERVO_OFFSET)
+			foundRock = true;
 
 		//usData[i].distance = random(0, 300);	// remove this line when there is an actual input
 

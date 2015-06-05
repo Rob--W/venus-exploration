@@ -152,11 +152,11 @@ int drive(unsigned int distance, int angle)
 		PRight(abs(angle) * round(555 / 90));
 	} 
 
-	return FForward(distance * round(2000 / 30));
+	return FForward(distance * round(2000.0 / 30));
 }
 
 // Full speed forward
-int FForward(int distanceDelay) {
+int FForward(long distanceDelay) {
 	// Traveled distance (in cm).
 	int i = 0;
 	int countpulse = 0;
@@ -211,7 +211,7 @@ void PRight(int angleDelay){
 	delay(angleDelay);                                // ...for 0.6 seconds ( er stond 600)
 }
 // Full speed backward
-void FBack(int distanceDelay){
+void FBack(long distanceDelay){
 	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
 	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
 	delay(distanceDelay);                               // ...for 2 seconds

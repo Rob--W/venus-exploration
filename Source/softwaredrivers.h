@@ -25,8 +25,8 @@ int drive(unsigned int distance, int angle);
 // Move forwards at the full speed.
 // distanceDelay is the approximate time needed to drive distance (in cm).
 // Returns the traveled distance (in cm).
-int FForward(int distanceDelay);
-void FBack(int distanceDelay);
+int FForward(long distanceDelay);
+void FBack(long distanceDelay);
 void PRight(int angleDelay);
 void PLeft(int angleDelay);
 void Turn180();

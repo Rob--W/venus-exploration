@@ -153,13 +153,13 @@ void calibratespeedFixedDistance(int percentagePower){
 	int leftWheelTime;
 
 	int n = round((travelDistance * 16) / (66.5*PI)); //number of pulses needed to drive distance. distance in mm
-
+	Serial.print("n: ");
+	Serial.println(n);
 	bool prevpulseRight = digitalRead(rightencoder);
 	bool prevpulseLeft = digitalRead(leftencoder);
 	int countpulseRight = 0;
 	int countpulseLeft = 0;
 	int speed = ((1500 + ((percentagePower) / 100.0) * 100));
-	Serial.print("Speed:   ");
 
 	//Drive forward
 	servoRight.writeMicroseconds(1500 + ((percentagePower) / 100.0) * 200);
@@ -171,6 +171,8 @@ void calibratespeedFixedDistance(int percentagePower){
 		if ((digitalRead(rightencoder) != prevpulseRight) && countpulseRight <n){
 			prevpulseRight = !prevpulseRight;
 			countpulseRight++;
+			Serial.print("countPulse Right: ");
+			Serial.println(countpulseRight);
 			if (countpulseRight == n)
 				rightWheelTime = (millis() - beginTime);
 		}
@@ -178,6 +180,8 @@ void calibratespeedFixedDistance(int percentagePower){
 		if ((digitalRead(leftencoder) != prevpulseLeft) && countpulseLeft <n){
 			prevpulseLeft = !prevpulseLeft;
 			countpulseLeft++;
+			Serial.print("countPulse Left: ");
+			Serial.println(countpulseLeft);
 			if (countpulseLeft == n)
 				leftWheelTime = (millis() - beginTime);
 		}
@@ -246,14 +250,14 @@ void calibratespeedFixedDistance(int percentagePower){
 int calculateAngleDelayLeft(int angle){
 	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
 	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	Serial.print(((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward));
+	Serial.print(((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward)*mmconv);
 	return((((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward))*mmconv); //average speed instead of time (seems to be more exact)
 }
 
 int calculateAngleDelayRight(int angle){
 	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
 	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	Serial.print(((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward));
+	Serial.print(((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward)*mmconv);
 	return((((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward))*mmconv);
 }
 
@@ -343,15 +347,15 @@ int drive(unsigned int distance, int angle)
 {
 	if (angle >= 0) {
 		// left angle
-		turnLeft(90, angle);
+		turnLeft(100, angle);
 		//PLeft(abs(angle) * round(555 / 90));
 	} else if (angle < 0) {
 		// right angle
-		turnRight(90, angle);
+		turnRight(100, angle);
 		//PRight(abs(angle) * round(555 / 90));
 	} 
 
-	return philipsForward(90, distance);
+	return philipsForward(100, distance*10);
 		//FForward(distance * round(2000.0 / 30));
 }
 

@@ -126,24 +126,32 @@ void setup()
 	Serial.begin(9600);
 	
 	startSetup();
-
-	stop();
 	openGrabber();
+	Serial.println("startsetup");
+	calibratespeedFixedDistance(90);
+	stop();
+	
 	delay(1000);
 }
 
 // Main program loop
 void loop()
 {
-	// Start the strategy
-	initiateDrive();
+	drive(20, 0);
+	delay(2000);
+	drive(20, 180);
+	delay(2000);
+	drive(0, 180);
+	delay(2000);
+	//// Start the strategy
+	//initiateDrive();
 
-	//Serial.println(readUltraTop(90));
+	////Serial.println(readUltraTop(90));
 
 
-	drive(50, -50);
-	delay(200);
-	//Serial.println(readUltraBot());
+	//drive(50, -50);
+	//delay(200);
+	////Serial.println(readUltraBot());
 }
 
 // Routine for the obstacle functions and things that needs to be handled

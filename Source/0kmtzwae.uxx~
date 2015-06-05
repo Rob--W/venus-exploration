@@ -133,7 +133,6 @@ void loop()
 	// Start the strategy
 	initiateDrive();
 
-
 	//Serial.println(readUltraBot());
 }
 
@@ -148,11 +147,11 @@ bool checkObstacles()
 		crashed = true;
 	}
 
-	//if (readUltraBot() > 2 && readUltraBot() < SAFE_ROCK_DISTANCE + 10 && BOTTOM_US_SENSOR)
-	//{
-	//	crashCause = ROCK;
-	//	crashed = true;
-	//}
+	if (readUltraBot() > 2 && readUltraBot() < SAFE_ROCK_DISTANCE + 10 && BOTTOM_US_SENSOR)
+	{
+		crashCause = ROCK;
+		crashed = true;
+	}
 
 
 	//if (readUltraBot() < SAFE_ROCK_DISTANCE) {
@@ -172,37 +171,27 @@ void initiateDrive()
 {
 	path newPath;
 
-	//if (loopCounter > 3)
-	//{
-	//	reversePath();
-	//	while (true) {}
-	//}
-
-
-
-
-	//// Gain information using the top US-sensor
-	//if (readUltraBot() < ROCK_RANGE)
-	//{
-	//	foundRock = false;
-	//	grabberOpen = false;
-	//	closeGrabber();
-	//	reversePath();
-	//	openGrabber();
-	//	while (true) {}
-	//}
-	//else
-	//{
-	//	if (foundRock)
-	//	{
-	//		searchRock();
-	//		return;
-	//	}
-	//	else {
-	//		grabberOpen = true;
-	//		openGrabber();
-	//	}
-	//}
+	// Gain information using the top US-sensor
+	if (readUltraBot() < ROCK_RANGE)
+	{
+		foundRock = false;
+		grabberOpen = false;
+		closeGrabber();
+		reversePath();
+		openGrabber();
+		while (true) {}
+	}
+	else
+	{
+		if (foundRock)
+		{
+			searchRock();
+		}
+		else {
+			grabberOpen = true;
+			openGrabber();
+		}
+	}
 	// Start scanning with top US-sensor
 	scanSurroundings();
 
@@ -211,92 +200,63 @@ void initiateDrive()
 	// Must be extended using the padding matrix to determine
 	// whether we've already been there.
 
-	//if (BOTTOM_US_SENSOR && foundRock)
-	//{
-	//	newPath.distance = usDown;
-	//	newPath.angle = 0;
-	//	Serial.println("Rock found!");
-	//}
-	//else {
-		newPath = getClosestPath(usData, SAMPLES, true);
-	//}
-
-		unsigned int distance = newPath.distance;
-		newPath.distance = 0;
-	// Add path to array
-	setPath(newPath);
-
-	drive(0, newPath.angle);
-	distance = readUltraTop(USSERVO_OFFSET);
-	Serial.print(readUltraBot());
-	Serial.print(" vs ");
-	Serial.println(distance);
-	if (readUltraBot() < distance + 1 && BOTTOM_US_SENSOR)
+	if (BOTTOM_US_SENSOR && foundRock)
 	{
-		// Found rock
-		Serial.print("Distance: ");
-		Serial.print(distance);
-		Serial.print(" vs ");
-		Serial.println(readUltraBot());
-
-		foundRock = true;
-
+		newPath.distance = usDown;
 		newPath.angle = 0;
-		newPath.distance = readUltraBot() - SAFE_ROCK_DISTANCE;
-
+		Serial.println("Rock found!");
 	}
 	else {
-		Serial.println("No difference found");
-		newPath.angle = 0;
-		newPath.distance = distance - SAFE_DISTANCE;
+		newPath = getClosestPath(usData, SAMPLES, true);
 	}
-		
+
+	// Add path to array
 	setPath(newPath);
 
 
 	// Calculate the coordinates from the given array
 	path temp = getAbsoluteCoordinate();
-	//if (foundRock && BOTTOM_US_SENSOR)
-	//{
-	//	// Apparently we've found a rock
-	//	addRock(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
-	//	addVisit(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
-	//}
-	//else {
-	//	if (getVisits(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)) <= INTEREST_THRESHOLD){
-	//		// If the map hasn't registered the object, add it to the map
-	//		if (!hasObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)))
-	//			setObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
+	if (foundRock && BOTTOM_US_SENSOR)
+	{
+		// Apparently we've found a rock
+		addRock(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
+		addVisit(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
+	}
+	else {
+		if (getVisits(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)) <= INTEREST_THRESHOLD){
+			// If the map hasn't registered the object, add it to the map
+			if (!hasObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY)))
+				setObstacle(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
 
-	//		// Add a visit, to make the location less interesting
-	//		addVisit(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
-	//	}
-	//	else {
-	//		// Create variables where getSuggestion can store the results in
-	//		byte suggestedX = 0, suggestedY = 0;
+			// Add a visit, to make the location less interesting
+			addVisit(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
+		}
+		else {
+			// Create variables where getSuggestion can store the results in
+			byte suggestedX = 0, suggestedY = 0;
 
-	//		// Check whether there is a direction which could be interesting
-	//		if (getSuggestion(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY), &suggestedX, &suggestedY))
-	//		{
-	//			// The given location is interesting, we need to head in that location
+			// Check whether there is a direction which could be interesting
+			if (getSuggestion(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY), &suggestedX, &suggestedY))
+			{
+				// The given location is interesting, we need to head in that location
 
-	//			// TODO: calculate the given coordinates back to a vector that is drivable from the point the robots are standing now
-	//		}
-	//		else {
-	//			// The given location is not interesting, fallback on some more primitive route changes
+				// TODO: calculate the given coordinates back to a vector that is drivable from the point the robots are standing now
+			}
+			else {
+				// The given location is not interesting, fallback on some more primitive route changes
 
-	//			// Thus remove the current path
-	//			removePath(currentPathID - 1);
+				// Thus remove the current path
+				removePath(currentPathID - 1);
 
-	//			// set a dodging move
-	//			newPath.angle = 90;
-	//			newPath.distance = 20;
+				// set a dodging move
+				newPath.angle = 90;
+				newPath.distance = 20;
 
-	//			// And add to the waypoint library
-	//			setPath(newPath);
-	//		}
-	//	}
-	//}
+				// And add to the waypoint library
+				setPath(newPath);
+			}
+		}
+	}
 
 
 	Serial.print("Waypoint: ");
@@ -957,56 +917,60 @@ path dodgeCliff(unsigned int distanceDriven)
 // Sweep around with the wheels to find the rock	
 void searchRock()
 {
-	path grabRock;
+	int angleStep = 0;
+	int angle = 0;
 
-	unsigned int distance = readUltraBot();
+	if (angleStep = (180 % (SAMPLES - 1)) != 0)
+		angleStep = 30;
+	else
+		angleStep = 180 / (SAMPLES - 1);
 
-	// First scan straight forward 
-	if (distance < SAFE_DISTANCE)
+
+	int i = 0;
+	// gather the samples
+	for (i; i < SAMPLES; ++i)
 	{
-		grabRock.distance = distance;
-		grabRock.angle = 0;
+		// Make the move
+		drive(0, -10);
+		delay(200);
 
-		setPath(grabRock);
+		// Missuse the array for the top US-sensor
+		usData[i].angle = angle;
+		
+		// Get the data from the sensor
+		int distance = readUltraBot();
 
-		drive(grabRock.distance, grabRock.angle);
+		if (distance < SAFE_ROCK_DISTANCE + 5)
+			break;
 
-		return;
+		// Save the distance
+		usData[i].distance = distance;
+
+		// Calculate next step
+		angle = 0 - (i + 1)*angleStep;
+
+		if (angle == -90) {
+			angle = 90;
+			drive(0, 180);
+		}
+	}
+	
+	// Rotate back to the forward facing direction
+	drive(0, -90);
+
+	// Get the potential rock location
+	path pathToRock;
+	if (i != SAMPLES)
+	{
+		pathToRock= getClosestPath(usData, SAMPLES, true);
 	}
 	else {
-		int i = 0;
-
-		while (readUltraBot() > SAFE_DISTANCE)
-		{
-			if (i < 9)
-			{
-				drive(0, -10);
-			}
-			else if (i = 9)
-			{
-				drive(0, 90);
-			}
-			else if (i > 9)
-			{
-				drive(0, 10);
-			}
-
-			delay(200);
-
-			if (readUltraBot() < SAFE_DISTANCE)
-			{
-				grabRock.distance = distance;
-				grabRock.angle = 0;
-
-				setPath(grabRock);
-
-				drive(grabRock.distance, grabRock.angle);
-
-				return;
-			}
-		}
-
+		pathToRock = usData[i];
 	}
 
+	// Set the path
+	setPath(pathToRock);
 
+	// Drive the shit 
+	drive(pathToRock.distance, pathToRock.angle);
 }

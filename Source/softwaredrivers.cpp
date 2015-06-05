@@ -164,6 +164,7 @@ int FForward(int distanceDelay) {
 	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
 	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
 
+	Serial.println(distanceDelay);
 
 	if (distanceDelay != 0) {
 		//delay(distanceDelay);       
@@ -175,7 +176,7 @@ int FForward(int distanceDelay) {
 			delay(2000 / 30);
 		}*/
 		//"millis-delay";
-		int t = millis() + distanceDelay;	//Timestamp + time wallee has to drive
+		long t = (millis() + distanceDelay);	//Timestamp + time wallee has to drive
 		while (millis() < (t)){		//while loop that will stay in it for a certain time distanceDelay
 			//IRscan;
 			//Mappen;

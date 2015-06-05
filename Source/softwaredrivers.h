@@ -1,6 +1,14 @@
 #pragma once
 
-bool checkObstacles();
+enum crash {
+	NONE,
+	US_TOP,
+	US_DOWN,
+	IR_DOWN,
+	ROCK
+} crashCause;
+
+crash checkObstacles();
 
 void startSetup(); //Content needed for the pin initialisation in function setup()
 /*

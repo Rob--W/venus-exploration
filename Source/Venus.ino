@@ -77,14 +77,6 @@ bool grabberOpen = false;
 bool holdsRock = false;
 bool foundRock = false;
 
-enum crash {
-	NONE,
-	US_TOP,
-	US_DOWN,
-	IR_DOWN,
-	ROCK
-} crashCause;
-
 
 // ----------------------------------------------------------
 // PROTOTYPES
@@ -131,21 +123,21 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	initiateDrive();
+	//initiateDrive();
 
-
+	drive(50, -50);
+	delay(200);
 	//Serial.println(readUltraBot());
 }
 
 // Routine for the obstacle functions and things that needs to be handled
 // during the driving procedure
-bool checkObstacles()
+crash checkObstacles()
 {
 	// Simple (placeholder) collission detection
 	if (!One())
 	{
-		crashCause = US_TOP;			// Collission detected!
-		crashed = true;
+		return US_TOP;
 	}
 
 	//if (readUltraBot() > 2 && readUltraBot() < SAFE_ROCK_DISTANCE + 10 && BOTTOM_US_SENSOR)
@@ -164,7 +156,7 @@ bool checkObstacles()
 		
 
 	// Return true when everything is ok
-	return crashed;
+	return NONE;
 }
 
 // Start from lab
@@ -342,6 +334,7 @@ void initiateDrive()
 		}
 	}
 
+	crashed = false;
 
 	++loopCounter;
 }

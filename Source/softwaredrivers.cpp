@@ -181,7 +181,9 @@ int FForward(int distanceDelay) {
 			//IRscan;
 			//Mappen;
 			//Ultratopread
-			if (checkObstacles())
+
+			crashCause = checkObstacles();
+			if (crashCause != NONE)
 				break;
 			
 			//Spakentellen/Count spokes to find the distance traveled (approximately

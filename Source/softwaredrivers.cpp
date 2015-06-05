@@ -184,8 +184,8 @@ int FForward(long distanceDelay) {
 			//Mappen;
 			//Ultratopread
 
-			crashCause = checkObstacles();
-			if (crashCause != NONE)
+			
+			if (checkObstacles())
 				break;
 			
 			//Spakentellen/Count spokes to find the distance traveled (approximately

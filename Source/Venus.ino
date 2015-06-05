@@ -52,6 +52,15 @@
 #define DODGE_DISTANCE		15				// Distance the robot should drive each dodge move
 #define BOTTOM_US_SENSOR	false		// Turn the sensor on or off
 
+enum crash {
+	NONE,
+	US_TOP,
+	US_DOWN,
+	IR_DOWN,
+	ROCK
+} crashCause;
+
+
 // current ID for the path array
 unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
@@ -139,12 +148,13 @@ void loop()
 
 // Routine for the obstacle functions and things that needs to be handled
 // during the driving procedure
-crash checkObstacles()
+bool checkObstacles()
 {
 	// Simple (placeholder) collission detection
 	if (!One())
 	{
-		return US_TOP;
+		crashCause = US_TOP;
+		return true;
 	}
 
 	//if (readUltraBot() > 2 && readUltraBot() < SAFE_ROCK_DISTANCE + 10 && BOTTOM_US_SENSOR)
@@ -163,7 +173,7 @@ crash checkObstacles()
 		
 
 	// Return true when everything is ok
-	return NONE;
+	return false;
 }
 
 // Start from lab

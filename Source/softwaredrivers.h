@@ -1,14 +1,6 @@
 #pragma once
 
-enum crash {
-	NONE,
-	US_TOP,
-	US_DOWN,
-	IR_DOWN,
-	ROCK
-} crashCause;
-
-crash checkObstacles();
+bool checkObstacles();
 enum colour { BLACK, WHITE, GREY, OTHER };
 
 

@@ -50,6 +50,7 @@
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 #define DODGE_ANGLE			-90				// Angle in which the robot should turn for a cliff
 #define DODGE_DISTANCE		15				// Distance the robot should drive each dodge move
+#define BOTTOM_US_SENSOR	true			// Turn the sensor on or off
 
 // current ID for the path array
 unsigned int currentPathID = 0;
@@ -80,7 +81,8 @@ enum crash {
 	NONE,
 	US_TOP,
 	US_DOWN,
-	IR_DOWN
+	IR_DOWN,
+	ROCK
 } crashCause;
 
 
@@ -103,7 +105,7 @@ bool IRM();
 bool IRG();
 void light();
 void USU();
-void USD();
+bool USD();
 bool One();
 
 void dodge(unsigned int distance, int angle);
@@ -130,6 +132,8 @@ void loop()
 {
 	// Start the strategy
 	initiateDrive();
+
+	//Serial.println(readUltraBot());
 }
 
 // Routine for the obstacle functions and things that needs to be handled
@@ -142,6 +146,22 @@ bool checkObstacles()
 		crashCause = US_TOP;			// Collission detected!
 		crashed = true;
 	}
+
+	if (readUltraBot() > 2 && readUltraBot() < SAFE_ROCK_DISTANCE + 10 && BOTTOM_US_SENSOR)
+	{
+		crashCause = ROCK;
+		crashed = true;
+	}
+
+
+	//if (readUltraBot() < SAFE_ROCK_DISTANCE) {
+	//	closeGrabber();
+	//	grabberOpen = false;
+	//	foundRock = true;
+	//	delay(1000);
+	//}
+		
+
 	// Return true when everything is ok
 	return crashed;
 }
@@ -152,20 +172,25 @@ void initiateDrive()
 	path newPath;
 
 	// Gain information using the top US-sensor
-	if (loopCounter > 3) {
-		reversePath();
-		while (true){}
-	}
-
 	if (readUltraBot() < ROCK_RANGE)
 	{
+		foundRock = false;
 		grabberOpen = false;
 		closeGrabber();
+		reversePath();
+		openGrabber();
+		while (true) {}
 	}
 	else
 	{
-		grabberOpen = true;
-		openGrabber();
+		if (foundRock)
+		{
+			searchRock();
+		}
+		else {
+			grabberOpen = true;
+			openGrabber();
+		}
 	}
 	// Start scanning with top US-sensor
 	scanSurroundings();
@@ -174,7 +199,8 @@ void initiateDrive()
 	// (set the last parameter to false to gain the max value)
 	// Must be extended using the padding matrix to determine
 	// whether we've already been there.
-	if (foundRock)
+
+	if (BOTTOM_US_SENSOR && foundRock)
 	{
 		newPath.distance = usDown;
 		newPath.angle = 0;
@@ -190,7 +216,7 @@ void initiateDrive()
 
 	// Calculate the coordinates from the given array
 	path temp = getAbsoluteCoordinate();
-	if (foundRock)
+	if (foundRock && BOTTOM_US_SENSOR)
 	{
 		// Apparently we've found a rock
 		addRock(toMapCoordinate(temp.mapX), toMapCoordinate(temp.mapY));
@@ -268,9 +294,12 @@ void initiateDrive()
 			dodgeCliff(drivenDistance);
 			crashCause = NONE;
 			break;
+
+		case ROCK:
+			foundRock = true;
+			crashCause = NONE;
+			break;
 		}
-
-
 	}
 
 
@@ -443,7 +472,7 @@ void scanSurroundings()
 	for (int i = 0; i < SAMPLES; ++i)
 	{
 		usData[i].angle = angle;
-		if (angle == USSERVO_OFFSET)
+		if (angle == USSERVO_OFFSET && BOTTOM_US_SENSOR)
 		{
 			usDown = readUltraBot() - SAFE_ROCK_DISTANCE;
 			Serial.print("Bottom: ");
@@ -468,7 +497,7 @@ void scanSurroundings()
 
 		usData[i].distance = distance;
 
-		if (usDown < (distance + SAFE_DISTANCE) && angle == USSERVO_OFFSET)
+		if (usDown < (distance + SAFE_DISTANCE) && angle == USSERVO_OFFSET && BOTTOM_US_SENSOR)
 			foundRock = true;
 
 		//usData[i].distance = random(0, 300);	// remove this line when there is an actual input
@@ -725,10 +754,9 @@ void USU(){
 	}
 }
 /*UltrasoonDown*/
-void USD(){
-	if (readUltraBot() < 15){
-		drive(5, 0);			//rijd er nog iets dichter naartoe
-		IRM();
+bool USD(){
+	if (readUltraBot() < SAFE_ROCK_DISTANCE){
+		
 	}//re-scan
 	else{
 		USU();					//false alarm, retry
@@ -885,3 +913,60 @@ path dodgeCliff(unsigned int distanceDriven)
 	return temp;
 }
 
+// We think we are close to a rock, but we haven't seen one between the grabbers. 
+// Sweep around with the wheels to find the rock	
+void searchRock()
+{
+	int angleStep = 0;
+	int angle = -90;
+
+	if (angleStep = (180 % (SAMPLES - 1)) != 0)
+		angleStep = 30;
+	else
+		angleStep = 180 / (SAMPLES - 1);
+
+	drive(0, -90);
+
+	int i = 0;
+	// gather the samples
+	for (i; i < SAMPLES; ++i)
+	{
+		// Make the move
+		drive(0, 10);
+		delay(200);
+
+		// Missuse the array for the top US-sensor
+		usData[i].angle = angle;
+		
+		// Get the data from the sensor
+		int distance = readUltraBot();
+
+		if (distance < SAFE_ROCK_DISTANCE + 10)
+			break;
+
+		// Save the distance
+		usData[i].distance = distance;
+
+		// Calculate next step
+		angle = -90 + (i + 1)*angleStep;
+	}
+	
+	// Rotate back to the forward facing direction
+	drive(0, -90);
+
+	// Get the potential rock location
+	path pathToRock;
+	if (i != SAMPLES)
+	{
+		pathToRock= getClosestPath(usData, SAMPLES, true);
+	}
+	else {
+		pathToRock = usData[i];
+	}
+
+	// Set the path
+	setPath(pathToRock);
+
+	// Drive the shit 
+	drive(pathToRock.distance, pathToRock.angle);
+}

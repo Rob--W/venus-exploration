@@ -5,7 +5,8 @@
 #define US_BOTPIN_O 4
 #define US_BOTPIN_I 5
 #define mmconv				1000.0 //meter times 1000 = mm
-
+#define IR_RB A0
+#define IR_LB A1
 //  Have to be defined as global variables distance/time=[mm/s]
 unsigned int speedRightWheelForward = 0;
 unsigned int speedLeftWheelForward = 0;
@@ -380,6 +381,8 @@ int FForward(long distanceDelay) {
 			//IRscan;
 			//Mappen;
 			//Ultratopread
+
+			
 			if (checkObstacles())
 				break;
 			
@@ -436,24 +439,41 @@ int readIRMid() //reads Middle IR. Return unit to be determined
 
 }
 
-int readIRGrab()    //Reads IR Grabber. Return unit to be determined
+int readIRGrab()    //Reads IR Grabber. Return unit to be determined;
 {		
 
 }
 
-int readLightSense()   //Reads Light Sensor. Return unit to be determined
+int readLightSense()                   //Reads Light Sensor. Return unit to be determined
 {	
 
 }
 
-int readirlb() //reads ir left bottom. return unit to be determined
+colour readirlb()                         //reads ir left bottom. return unit to be determined; Threshold: 950 is black. grey 890, black 990, white < 800
 {
-
+	int temp = analogRead(IR_LB);
+	if (temp > 950)
+		return BLACK;
+	else if (temp > 800 && temp < 950)
+		return GREY;
+	else if (temp < 800)
+		return WHITE;
+	else
+		return OTHER;
 }
 
-int readirrb() //reads ir right bottom. return unit to be determined
-{
 
+colour readirrb()                         //reads ir right bottom. return unit to be determined;  Threshold: 950 is black. grey 890, black 990, white < 800
+{
+	int temp = analogRead(IR_RB);
+	if (temp > 950)
+		return BLACK;
+	else if (temp > 800 && temp < 950)
+		return GREY;
+	else if (temp < 800)
+		return WHITE;
+	else
+		return OTHER;
 }
 
 int microsecondsToCentimeters(int microseconds)
@@ -466,7 +486,7 @@ int microsecondsToCentimeters(int microseconds)
 
 int readUltraTop(int angle)  //Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
 {		
-	servoUltra.write(angle);
+	servoUltra.write(180 - angle);
 	// establish variables for duration of the ping, 
 	// and the distance result in inches and centimeters:
 	int duration, inches, cm;

@@ -39,7 +39,7 @@ If confirmation received:                                   If confirmation mess
 5, Arduino 1: Finished                                      5, Arduino 1: Start at step 1
 */
 
-void xBeeBroadcast(byte X, byte Y, byte status);   // Handles entire broadcast
+void xBeeBroadcast(byte X, byte Y, byte status);  // Handles entire broadcast
 void xBeeWrite(byte X, byte Y, byte status);      // Broadcasts message of the form coord 1 coord 2 status
 void xBeeReadMessage();                           // Will read out the last message sent
 bool xBeeAvailable();                             // Returns true if a broadcast has been found

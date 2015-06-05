@@ -50,13 +50,23 @@
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 #define DODGE_ANGLE			-90				// Angle in which the robot should turn for a cliff
 #define DODGE_DISTANCE		15				// Distance the robot should drive each dodge move
-#define BOTTOM_US_SENSOR	true			// Turn the sensor on or off
+#define BOTTOM_US_SENSOR	false		// Turn the sensor on or off
+
+enum crash {
+	NONE,
+	US_TOP,
+	US_DOWN,
+	IR_DOWN,
+	ROCK
+} crashCause;
+
 
 // current ID for the path array
 unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
 path usData[SAMPLES] = { NULL };
 byte usDown = 0;
+
 // Crash handling variable
 bool crashed = false;
 
@@ -77,13 +87,8 @@ bool grabberOpen = false;
 bool holdsRock = false;
 bool foundRock = false;
 
-enum crash {
-	NONE,
-	US_TOP,
-	US_DOWN,
-	IR_DOWN,
-	ROCK
-} crashCause;
+// tracking variables for forbidden moves
+int forbiddenAngle = NULL;
 
 
 // ----------------------------------------------------------
@@ -133,7 +138,11 @@ void loop()
 	// Start the strategy
 	initiateDrive();
 
+	//Serial.println(readUltraTop(90));
 
+
+	drive(50, -50);
+	delay(200);
 	//Serial.println(readUltraBot());
 }
 
@@ -144,8 +153,8 @@ bool checkObstacles()
 	// Simple (placeholder) collission detection
 	if (!One())
 	{
-		crashCause = US_TOP;			// Collission detected!
-		crashed = true;
+		crashCause = US_TOP;
+		return true;
 	}
 
 	//if (readUltraBot() > 2 && readUltraBot() < SAFE_ROCK_DISTANCE + 10 && BOTTOM_US_SENSOR)
@@ -164,7 +173,7 @@ bool checkObstacles()
 		
 
 	// Return true when everything is ok
-	return crashed;
+	return false;
 }
 
 // Start from lab
@@ -220,7 +229,13 @@ void initiateDrive()
 	//else {
 		newPath = getClosestPath(usData, SAMPLES, true);
 	//}
-
+		// Check if we found out a angle that we're not allowed to drive
+		if (newPath.angle > forbiddenAngle - 10 && newPath.angle < forbiddenAngle + 10)
+		{
+			dodge(0, -forbiddenAngle);
+			forbiddenAngle = NULL;
+			return;
+		}
 		unsigned int distance = newPath.distance;
 		newPath.distance = 0;
 	// Add path to array
@@ -324,7 +339,7 @@ void initiateDrive()
 			// ---
 			break;
 		case US_TOP:
-			dodgeCliff(drivenDistance);
+			
 			crashCause = NONE;
 			break;
 		case US_DOWN:
@@ -342,8 +357,10 @@ void initiateDrive()
 		}
 	}
 
+	crashed = false;
 
 	++loopCounter;
+	crashed = false;
 }
 
 // Add a new path to the array for later reference
@@ -885,12 +902,8 @@ void dodge(unsigned int distance, int angle)
 	dodge.distance = distance;
 	dodge.angle = angle;
 
-	// First dodge move? Save the currentPathID
-	if (startDodge == 0)
-		startDodge = currentPathID;
-
-	// Keep track of the number of moves
-	++dodgeCounter;
+	// Set the angle we've just been looking for
+	forbiddenAngle = -angle;
 
 	// Add the path to the waypoint array
 	setPath(dodge);

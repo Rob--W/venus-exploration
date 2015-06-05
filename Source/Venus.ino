@@ -50,7 +50,7 @@
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 #define DODGE_ANGLE			-90				// Angle in which the robot should turn for a cliff
 #define DODGE_DISTANCE		15				// Distance the robot should drive each dodge move
-#define BOTTOM_US_SENSOR	true			// Turn the sensor on or off
+#define BOTTOM_US_SENSOR	false		// Turn the sensor on or off
 
 // current ID for the path array
 unsigned int currentPathID = 0;
@@ -133,6 +133,8 @@ void loop()
 	// Start the strategy
 	initiateDrive();
 
+	//Serial.println(readUltraTop(90));
+	
 
 	//Serial.println(readUltraBot());
 }
@@ -344,6 +346,7 @@ void initiateDrive()
 
 
 	++loopCounter;
+	crashed = false;
 }
 
 // Add a new path to the array for later reference

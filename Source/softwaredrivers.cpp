@@ -267,7 +267,7 @@ int microsecondsToCentimeters(int microseconds)
 
 int readUltraTop(int angle)  //Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
 {		
-	servoUltra.write(angle);
+	servoUltra.write(180 - angle);
 	// establish variables for duration of the ping, 
 	// and the distance result in inches and centimeters:
 	int duration, inches, cm;

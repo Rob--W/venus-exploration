@@ -57,6 +57,7 @@ unsigned int currentPathID = 0;
 // Ultrasonic Sensor input array
 path usData[SAMPLES] = { NULL };
 byte usDown = 0;
+
 // Crash handling variable
 bool crashed = false;
 
@@ -76,6 +77,9 @@ unsigned int dodgeCounter = 0;
 bool grabberOpen = false;
 bool holdsRock = false;
 bool foundRock = false;
+
+// tracking variables for forbidden moves
+int forbiddenAngle = NULL;
 
 
 // ----------------------------------------------------------
@@ -215,7 +219,13 @@ void initiateDrive()
 	//else {
 		newPath = getClosestPath(usData, SAMPLES, true);
 	//}
-
+		// Check if we found out a angle that we're not allowed to drive
+		if (newPath.angle > forbiddenAngle - 10 && newPath.angle < forbiddenAngle + 10)
+		{
+			dodge(0, -forbiddenAngle);
+			forbiddenAngle = NULL;
+			return;
+		}
 		unsigned int distance = newPath.distance;
 		newPath.distance = 0;
 	// Add path to array
@@ -319,7 +329,7 @@ void initiateDrive()
 			// ---
 			break;
 		case US_TOP:
-			dodgeCliff(drivenDistance);
+			
 			crashCause = NONE;
 			break;
 		case US_DOWN:
@@ -882,12 +892,8 @@ void dodge(unsigned int distance, int angle)
 	dodge.distance = distance;
 	dodge.angle = angle;
 
-	// First dodge move? Save the currentPathID
-	if (startDodge == 0)
-		startDodge = currentPathID;
-
-	// Keep track of the number of moves
-	++dodgeCounter;
+	// Set the angle we've just been looking for
+	forbiddenAngle = -angle;
 
 	// Add the path to the waypoint array
 	setPath(dodge);

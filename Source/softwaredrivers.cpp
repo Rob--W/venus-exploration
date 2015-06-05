@@ -350,7 +350,7 @@ int readUltraBot()
 	//Serial.println();
 
 	delay(100);
-	return cm;
+	return cm - 2;
 }
 void openGrabber()
 {

@@ -41,16 +41,16 @@
 // ----------------------------------------------------------
 
 #define PATH_ENTRIES		100				// Maximum number of allowed paths
-#define SAMPLES				19				// Number of samples to take for the top-US sensor
+#define SAMPLES				37				// Number of samples to take for the top-US sensor
 #define PI					3.14159265359	// Obviously
-#define USSERVO_OFFSET		90				// Offset in the data for the top servo
+#define USSERVO_OFFSET		95				// Offset in the data for the top servo
 #define SAFE_DISTANCE		15				// Offset distance due placement of top/bottom US sensor (stopping distance)
 #define SAFE_ROCK_DISTANCE	10				// Offset from where the robot must stop to get the rock within grabber range
 #define ROCK_RANGE			10				// Range in which the gripper is able to grab the rock
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
 #define DODGE_ANGLE			-90				// Angle in which the robot should turn for a cliff
 #define DODGE_DISTANCE		15				// Distance the robot should drive each dodge move
-#define BOTTOM_US_SENSOR	false		// Turn the sensor on or off
+#define BOTTOM_US_SENSOR	true		// Turn the sensor on or off
 
 enum crash {
 	NONE,
@@ -139,11 +139,9 @@ void loop()
 	initiateDrive();
 
 	//Serial.println(readUltraTop(90));
-
-
-	drive(50, -50);
-	delay(200);
-	//Serial.println(readUltraBot());
+	//Serial.println(readUltraBot() - 2);
+	//Serial.println("---");
+	//delay(100);
 }
 
 // Routine for the obstacle functions and things that needs to be handled
@@ -154,14 +152,16 @@ bool checkObstacles()
 	if (!One())
 	{
 		crashCause = US_TOP;
+		crashed = true;
 		return true;
 	}
 
-	//if (readUltraBot() > 2 && readUltraBot() < SAFE_ROCK_DISTANCE + 10 && BOTTOM_US_SENSOR)
-	//{
-	//	crashCause = ROCK;
-	//	crashed = true;
-	//}
+	if (readUltraBot() < SAFE_ROCK_DISTANCE && BOTTOM_US_SENSOR && !foundRock)
+	{
+		Serial.println("Block found");
+		crashCause = ROCK;
+		crashed = true;
+	}
 
 
 	//if (readUltraBot() < SAFE_ROCK_DISTANCE) {
@@ -173,21 +173,13 @@ bool checkObstacles()
 		
 
 	// Return true when everything is ok
-	return false;
+	return crashed;
 }
 
 // Start from lab
 void initiateDrive()
 {
 	path newPath;
-
-	//if (loopCounter > 3)
-	//{
-	//	reversePath();
-	//	while (true) {}
-	//}
-
-
 
 
 	//// Gain information using the top US-sensor
@@ -230,12 +222,12 @@ void initiateDrive()
 		newPath = getClosestPath(usData, SAMPLES, true);
 	//}
 		// Check if we found out a angle that we're not allowed to drive
-		if (newPath.angle > forbiddenAngle - 10 && newPath.angle < forbiddenAngle + 10)
-		{
-			dodge(0, -forbiddenAngle);
-			forbiddenAngle = NULL;
-			return;
-		}
+		//if (newPath.angle > forbiddenAngle - 10 && newPath.angle < forbiddenAngle + 10)
+		//{
+		//	dodge(0, -forbiddenAngle);
+		//	forbiddenAngle = NULL;
+		//	return;
+		//}
 		unsigned int distance = newPath.distance;
 		newPath.distance = 0;
 	// Add path to array
@@ -246,18 +238,14 @@ void initiateDrive()
 	Serial.print(readUltraBot());
 	Serial.print(" vs ");
 	Serial.println(distance);
-	if (readUltraBot() < distance + 1 && BOTTOM_US_SENSOR)
+	if (readUltraBot() < distance - 1 && BOTTOM_US_SENSOR)
 	{
 		// Found rock
-		Serial.print("Distance: ");
-		Serial.print(distance);
-		Serial.print(" vs ");
-		Serial.println(readUltraBot());
-
+		Serial.println("Rock found");
 		foundRock = true;
 
 		newPath.angle = 0;
-		newPath.distance = readUltraBot() - SAFE_ROCK_DISTANCE;
+		newPath.distance = readUltraBot() + SAFE_ROCK_DISTANCE;
 
 	}
 	else {
@@ -339,28 +327,31 @@ void initiateDrive()
 			// ---
 			break;
 		case US_TOP:
-			
+			Serial.println("dodge");
+			//dodge(0, -90);
 			crashCause = NONE;
 			break;
 		case US_DOWN:
 			// ---
 			break;
 		case IR_DOWN:
-			dodgeCliff(drivenDistance);
+			//dodgeCliff(drivenDistance);
 			crashCause = NONE;
 			break;
 
 		case ROCK:
+			closeGrabber();
 			foundRock = true;
+			reversePath();
+			openGrabber();
+			
+			foundRock = false;
 			crashCause = NONE;
 			break;
 		}
 	}
-
 	crashed = false;
-
 	++loopCounter;
-	crashed = false;
 }
 
 // Add a new path to the array for later reference
@@ -903,7 +894,7 @@ void dodge(unsigned int distance, int angle)
 	dodge.angle = angle;
 
 	// Set the angle we've just been looking for
-	forbiddenAngle = -angle;
+	//forbiddenAngle = -angle;
 
 	// Add the path to the waypoint array
 	setPath(dodge);

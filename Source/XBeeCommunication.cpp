@@ -7,7 +7,7 @@ void xBeeBroadcast(byte X, byte Y, byte status)
 	byte a, b, c;
 	xBeeWrite(X, Y, status);
 
-	while (Serial.available() <= 0)
+	while (!xBeeAvailable)
 	{
 		delay(1);
 	}

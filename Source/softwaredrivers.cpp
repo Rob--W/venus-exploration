@@ -4,6 +4,8 @@
 
 #define US_BOTPIN_O 4
 #define US_BOTPIN_I 5
+#define IR_RB A0
+#define IR_LB A1
 
 Servo servoLeft;
 Servo servoRight;
@@ -152,11 +154,11 @@ int drive(unsigned int distance, int angle)
 		PRight(abs(angle) * round(555 / 90));
 	} 
 
-	return FForward(distance * round(2000 / 30));
+	return FForward(distance * round(2000.0 / 30));
 }
 
 // Full speed forward
-int FForward(int distanceDelay) {
+int FForward(long distanceDelay) {
 	// Traveled distance (in cm).
 	int i = 0;
 	int countpulse = 0;
@@ -181,7 +183,9 @@ int FForward(int distanceDelay) {
 			//IRscan;
 			//Mappen;
 			//Ultratopread
-			if (checkObstacles())
+
+			crashCause = checkObstacles();
+			if (crashCause != NONE)
 				break;
 			
 			//Spakentellen/Count spokes to find the distance traveled (approximately
@@ -211,7 +215,7 @@ void PRight(int angleDelay){
 	delay(angleDelay);                                // ...for 0.6 seconds ( er stond 600)
 }
 // Full speed backward
-void FBack(int distanceDelay){
+void FBack(long distanceDelay){
 	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
 	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
 	delay(distanceDelay);                               // ...for 2 seconds
@@ -237,24 +241,41 @@ int readIRMid() //reads Middle IR. Return unit to be determined
 
 }
 
-int readIRGrab()    //Reads IR Grabber. Return unit to be determined
+int readIRGrab()    //Reads IR Grabber. Return unit to be determined;
 {		
 
 }
 
-int readLightSense()   //Reads Light Sensor. Return unit to be determined
+int readLightSense()                   //Reads Light Sensor. Return unit to be determined
 {	
 
 }
 
-int readirlb() //reads ir left bottom. return unit to be determined
+colour readirlb()                         //reads ir left bottom. return unit to be determined; Threshold: 950 is black. grey 890, black 990, white < 800
 {
-
+	int temp = analogRead(IR_LB);
+	if (temp > 950)
+		return BLACK;
+	else if (temp > 800 && temp < 950)
+		return GREY;
+	else if (temp < 800)
+		return WHITE;
+	else
+		return OTHER;
 }
 
-int readirrb() //reads ir right bottom. return unit to be determined
-{
 
+colour readirrb()                         //reads ir right bottom. return unit to be determined;  Threshold: 950 is black. grey 890, black 990, white < 800
+{
+	int temp = analogRead(IR_RB);
+	if (temp > 950)
+		return BLACK;
+	else if (temp > 800 && temp < 950)
+		return GREY;
+	else if (temp < 800)
+		return WHITE;
+	else
+		return OTHER;
 }
 
 int microsecondsToCentimeters(int microseconds)

@@ -2,6 +2,18 @@
 #include <assert.h>
 #include <stdio.h>
 
+bool g_has_any_test_failure = false;
+
+#define EXPECT_EQ(expected, actual) \
+    do { \
+        byte result = (actual);\
+        if (result != expected) {\
+            g_has_any_test_failure = true;\
+            printf("Expectation failed: " #actual " should be " #expected \
+                    ", but was %d at line %d\n", result, __LINE__);\
+        }\
+    } while (0)
+
 void testRocks() {
     // Sanity check.
     assert(!hasRock(0, 0));
@@ -31,25 +43,25 @@ void testRocks() {
 }
 
 void testVisits() {
-    assert(getVisits(2, 2) == 0);
+    EXPECT_EQ(0, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 1);
+    EXPECT_EQ(1, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 2);
+    EXPECT_EQ(2, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 3);
+    EXPECT_EQ(3, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 4);
+    EXPECT_EQ(4, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 5);
+    EXPECT_EQ(5, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 6);
+    EXPECT_EQ(6, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 7);
+    EXPECT_EQ(7, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 7);
-    assert(getVisits(1, 2) == 0);
-    assert(getVisits(3, 2) == 0);
+    EXPECT_EQ(7, getVisits(2, 2));
+    EXPECT_EQ(0, getVisits(1, 2));
+    EXPECT_EQ(0, getVisits(3, 2));
 }
 
 void testObstacles() {
@@ -77,9 +89,9 @@ void testObstacles() {
     assert(!hasObstacle(3, 1));
 
     // Also check visits, because the visit and obstacle bitfields are combined.
-    assert(getVisits(0, 1) == 0);
-    assert(getVisits(1, 1) == 0);
-    assert(getVisits(1, 0) == 0);
+    EXPECT_EQ(0, getVisits(0, 1));
+    EXPECT_EQ(0, getVisits(1, 1));
+    EXPECT_EQ(0, getVisits(1, 0));
 }
 
 void testConversions() {
@@ -105,6 +117,8 @@ int main() {
     printf("Minimum memory usage by this module: %d bytes.\n",
             (VENUS_MAP_SIZE / 2) * VENUS_MAP_SIZE);
 
-    printf("All tests have completed successfully!\n");
+    if (!g_has_any_test_failure) {
+        printf("All tests have completed successfully!\n");
+    }
     return 0;
 }

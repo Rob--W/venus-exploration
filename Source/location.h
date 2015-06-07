@@ -38,10 +38,22 @@ bool hasObstacle(byte x, byte y);
 bool getSuggestion(byte x, byte y, byte* targetX, byte* targetY);
 
 // Convert between an int and a byte.
-// NOTE: The given methods have no meaningful implemented yet.
-// TODO(rob): Add a meaningful conversion? E.g. int = cm, byte = map coordinate.
-// Currently, toMapCoordinate just truncates the value, i.e. if the value is
-// larger than 255, then 255 is returned.
+// Assumptions:
+// - int is in range [-400,400]
+//   -400 if the robot starts at the left (range -400 to 0),
+//   +400 if the robot starts at the right (range 0 to +400).
+// - no efforts is spent on storing ints outside this range in the map.
 byte toMapCoordinate(int position);
 // Bytes always fit in an int, so currently an int is returned.
 int fromMapCoordinate(byte coordinate);
+
+#ifdef ONLY_FOR_TESTING_LOCATION_H
+void resetMap();
+extern const byte centerXY;
+// minX, maxX, minY and maxY are VALID indexes in the map.
+extern byte minX;
+extern byte maxX;
+extern byte minY;
+extern byte maxY;
+bool fitsInMap(byte* x, byte* y, bool forceFit);
+#endif

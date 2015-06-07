@@ -12,7 +12,7 @@ typedef unsigned char byte;
 // If the value is too small, then most of the measurements will not be saved.
 // If the value is too high, then the map won't fit in memory.
 // Must be a number between and including 0 and 255.
-#define VENUS_MAP_SIZE 40
+#define VENUS_MAP_SIZE 35
 
 // Use setRock to mark the location of the rock.
 // Duplicate entries are ignored because we cannot reasonably distinguish

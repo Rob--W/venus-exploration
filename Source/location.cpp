@@ -254,7 +254,7 @@ bool getSuggestion(byte x, byte y, byte* targetX, byte* targetY) {
 }
 
 byte toMapCoordinate(int position) {
-    position /= (400 / VENUS_MAP_SIZE);
+    position /= INTS_PER_SQUARE;
     position += centerXY;
     // Clamp to extreme values to avoid underflow/overflow.
     if (position < 0) {
@@ -270,6 +270,6 @@ byte toMapCoordinate(int position) {
 int fromMapCoordinate(byte coordinate) {
     int position = coordinate;
     position -= centerXY;
-    position *= (400 / VENUS_MAP_SIZE);
+    position *= INTS_PER_SQUARE;
     return position;
 }

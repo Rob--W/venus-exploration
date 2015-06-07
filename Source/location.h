@@ -14,6 +14,11 @@ typedef unsigned char byte;
 // Must be a number between and including 0 and 255.
 #define VENUS_MAP_SIZE 40
 
+// Number of ints per square. See toMapCoordinate / fromMapCoordinate.
+// If we assume that the field has a size of CxC ints (cm?), then
+// using (1 + C / VENUS_MAP_SIZE) should be ok.
+#define INTS_PER_SQUARE (400 / VENUS_MAP_SIZE)
+
 // Use setRock to mark the location of the rock.
 // Duplicate entries are ignored because we cannot reasonably distinguish
 void addRock(byte x, byte y);

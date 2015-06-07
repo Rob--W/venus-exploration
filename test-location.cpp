@@ -180,11 +180,24 @@ void testObstacles() {
 
 void testConversions() {
     resetMap();
-    // For now, just test that integers in the range [0,255] are preserved,
-    // and that other values are truncated.
-    assert(toMapCoordinate(100) == 100);
-    assert(toMapCoordinate(257) == 1);
-    assert(fromMapCoordinate(255) == 255);
+    // byte -> int is always without loss of information, so
+    // byte -> int -> byte should return the original value.
+    EXPECT_EQ(centerXY, toMapCoordinate(fromMapCoordinate(centerXY)));
+    EXPECT_EQ(0, toMapCoordinate(fromMapCoordinate(0)));
+    EXPECT_EQ(100, toMapCoordinate(fromMapCoordinate(100)));
+    EXPECT_EQ(255, toMapCoordinate(fromMapCoordinate(255)));
+
+    // Values outside the range should be clamped.
+    EXPECT_EQ(0, toMapCoordinate(fromMapCoordinate(0) - 100));
+    EXPECT_EQ(255, toMapCoordinate(fromMapCoordinate(255) + 100));
+    EXPECT_EQ(0, toMapCoordinate(fromMapCoordinate(0) * 2));
+    EXPECT_EQ(255, toMapCoordinate(fromMapCoordinate(255) * 2));
+
+    // Check whether close ints are consistently converted to a single byte.
+    EXPECT_EQ(centerXY - 1, toMapCoordinate(-INTS_PER_SQUARE));
+    EXPECT_EQ(centerXY, toMapCoordinate(1 - INTS_PER_SQUARE));
+    EXPECT_EQ(centerXY, toMapCoordinate(INTS_PER_SQUARE - 1));
+    EXPECT_EQ(centerXY + 1, toMapCoordinate(INTS_PER_SQUARE));
 }
 
 int main() {
@@ -192,8 +205,7 @@ int main() {
     testRocks();
     testVisits();
     testObstacles();
-    // Disabled.
-    //testConversions();
+    testConversions();
 
     // We only have so many bytes.
     assert((VENUS_MAP_SIZE / 2) * VENUS_MAP_SIZE < 2048);

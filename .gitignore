@@ -11,3 +11,7 @@
 Visual Micro/
 Source/softwaredriver.2.cpp.txt
 Debug
+
+# Ignore temp files
+*~
+*.[Tt][Mm][Pp]

@@ -1,5 +1,5 @@
 #include "location.h"
-#include <cstring>
+#include <string.h>
 
 #if (MAX_ROCK_COUNT) & ~0xFF == 0
 #error MAX_ROCK_COUNT must be a number between and including 0 and 255.

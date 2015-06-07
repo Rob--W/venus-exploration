@@ -198,6 +198,7 @@ void testConversions() {
     EXPECT_EQ(centerXY, toMapCoordinate(1 - INTS_PER_SQUARE));
     EXPECT_EQ(centerXY, toMapCoordinate(INTS_PER_SQUARE - 1));
     EXPECT_EQ(centerXY + 1, toMapCoordinate(INTS_PER_SQUARE));
+    EXPECT_EQ(255, toMapCoordinate(INTS_PER_SQUARE * 400));
 }
 
 int main() {

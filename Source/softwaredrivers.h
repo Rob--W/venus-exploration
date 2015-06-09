@@ -12,6 +12,7 @@ enum colour readIRLB();		//Reads IR Left Bottom. Return unit to be determined. h
 
 enum colour readIRRB();		//Reads IR Right Bottom. Return unit to be determined. has to be analog
 
+
 void stop();	//Stop function, makes the robot stop driving (if the servo's are properly set)
 
 //left: value between 0 and 180 that drives the left servo
@@ -24,8 +25,6 @@ void stop();	//Stop function, makes the robot stop driving (if the servo's are p
 // distance is the maximum distance (in cm).
 // Returns the traveled distance (in cm).
 int drive(unsigned int distance, int angle);
-//Function to measure the speed of the wheel at a certain amount of the wheels power
-void calibratespeedFixedDistance(int percentagePower);
 // Move forwards at the full speed.
 // distanceDelay is the approximate time needed to drive distance (in cm).
 // Returns the traveled distance (in cm).

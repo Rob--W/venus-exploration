@@ -1,8 +1,102 @@
+#undef ONLY_FOR_TESTING_LOCATION_H
+#define ONLY_FOR_TESTING_LOCATION_H
 #include "Source/location.h"
 #include <assert.h>
 #include <stdio.h>
 
+bool g_has_any_test_failure = false;
+
+#define EXPECT_EQ(expected, actual) \
+    do { \
+        byte result = (actual);\
+        if (result != expected) {\
+            g_has_any_test_failure = true;\
+            printf("Expectation failed: " #actual " should be " #expected \
+                    ", but was %d at line %d\n", result, __LINE__);\
+        }\
+    } while (0)
+
+void testFitInMap() {
+    resetMap();
+    // Initial values.
+    EXPECT_EQ(centerXY, minX);
+    EXPECT_EQ(centerXY, maxX);
+    EXPECT_EQ(centerXY, minY);
+    EXPECT_EQ(centerXY, maxY);
+
+    // The center starts at index (0,0).
+    byte x = centerXY;
+    byte y = centerXY;
+    assert(fitsInMap(&x, &y, false));
+    EXPECT_EQ(0, x);
+    EXPECT_EQ(0, y);
+
+    // Does not fit, and false means out value for x should not be used.
+    x = centerXY + 1;
+    y = centerXY;
+    assert(!fitsInMap(&x, &y, false));
+
+    // Basic test for X
+    x = centerXY + 1;
+    y = centerXY;
+    assert(fitsInMap(&x, &y, true));
+    EXPECT_EQ(centerXY + 1, maxX);
+    EXPECT_EQ(1, x);
+    EXPECT_EQ(0, y);
+
+    x = centerXY - 2;
+    y = centerXY;
+    assert(!fitsInMap(&x, &y, false));
+
+    x = centerXY - 2;
+    y = centerXY;
+    assert(fitsInMap(&x, &y, true));
+    EXPECT_EQ(centerXY - 2, minX); // Should fit
+    EXPECT_EQ(centerXY + 1, maxX); // Should not be changed
+    EXPECT_EQ(VENUS_MAP_SIZE - 2, x);
+    EXPECT_EQ(0, y);
+
+    // Basic test for Y
+    x = centerXY;
+    y = centerXY + 1;
+    assert(fitsInMap(&x, &y, true));
+    EXPECT_EQ(centerXY + 1, maxY);
+    EXPECT_EQ(0, x);
+    EXPECT_EQ(1, y);
+
+    x = centerXY;
+    y = centerXY - 2;
+    assert(!fitsInMap(&x, &y, false));
+
+    x = centerXY;
+    y = centerXY - 2;
+    assert(fitsInMap(&x, &y, true));
+    EXPECT_EQ(centerXY - 2, minY); // Should not be changed
+    EXPECT_EQ(centerXY + 1, maxY); // Should fit
+    EXPECT_EQ(0, x);
+    EXPECT_EQ(VENUS_MAP_SIZE - 2, y);
+
+    minX = maxX = minY = maxY = centerXY; // Reset state
+    // Off-by-one tests
+    x = centerXY;
+    y = centerXY + VENUS_MAP_SIZE - 1;
+    assert(fitsInMap(&x, &y, true));
+    EXPECT_EQ(centerXY + VENUS_MAP_SIZE - 1, maxY); // Should fit
+    EXPECT_EQ(0, x);
+    EXPECT_EQ(VENUS_MAP_SIZE - 1, y);
+
+    x = centerXY;
+    y = centerXY + VENUS_MAP_SIZE;
+    assert(!fitsInMap(&x, &y, true));
+
+    // There is no space any more.
+    x = centerXY;
+    y = centerXY - 1;
+    assert(!fitsInMap(&x, &y, true));
+}
+
 void testRocks() {
+    resetMap();
     // Sanity check.
     assert(!hasRock(0, 0));
     assert(!hasRock(100, 100));
@@ -31,28 +125,30 @@ void testRocks() {
 }
 
 void testVisits() {
-    assert(getVisits(2, 2) == 0);
+    resetMap();
+    EXPECT_EQ(0, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 1);
+    EXPECT_EQ(1, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 2);
+    EXPECT_EQ(2, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 3);
+    EXPECT_EQ(3, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 4);
+    EXPECT_EQ(4, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 5);
+    EXPECT_EQ(5, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 6);
+    EXPECT_EQ(6, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 7);
+    EXPECT_EQ(7, getVisits(2, 2));
     addVisit(2, 2);
-    assert(getVisits(2, 2) == 7);
-    assert(getVisits(1, 2) == 0);
-    assert(getVisits(3, 2) == 0);
+    EXPECT_EQ(7, getVisits(2, 2));
+    EXPECT_EQ(0, getVisits(1, 2));
+    EXPECT_EQ(0, getVisits(3, 2));
 }
 
 void testObstacles() {
+    resetMap();
     // Base case
     assert(!hasObstacle(1, 0));
     assert(!hasObstacle(1, 1));
@@ -77,20 +173,36 @@ void testObstacles() {
     assert(!hasObstacle(3, 1));
 
     // Also check visits, because the visit and obstacle bitfields are combined.
-    assert(getVisits(0, 1) == 0);
-    assert(getVisits(1, 1) == 0);
-    assert(getVisits(1, 0) == 0);
+    EXPECT_EQ(0, getVisits(0, 1));
+    EXPECT_EQ(0, getVisits(1, 1));
+    EXPECT_EQ(0, getVisits(1, 0));
 }
 
 void testConversions() {
-    // For now, just test that integers in the range [0,255] are preserved,
-    // and that other values are truncated.
-    assert(toMapCoordinate(100) == 100);
-    assert(toMapCoordinate(257) == 1);
-    assert(fromMapCoordinate(255) == 255);
+    resetMap();
+    // byte -> int is always without loss of information, so
+    // byte -> int -> byte should return the original value.
+    EXPECT_EQ(centerXY, toMapCoordinate(fromMapCoordinate(centerXY)));
+    EXPECT_EQ(0, toMapCoordinate(fromMapCoordinate(0)));
+    EXPECT_EQ(100, toMapCoordinate(fromMapCoordinate(100)));
+    EXPECT_EQ(255, toMapCoordinate(fromMapCoordinate(255)));
+
+    // Values outside the range should be clamped.
+    EXPECT_EQ(0, toMapCoordinate(fromMapCoordinate(0) - 100));
+    EXPECT_EQ(255, toMapCoordinate(fromMapCoordinate(255) + 100));
+    EXPECT_EQ(0, toMapCoordinate(fromMapCoordinate(0) * 2));
+    EXPECT_EQ(255, toMapCoordinate(fromMapCoordinate(255) * 2));
+
+    // Check whether close ints are consistently converted to a single byte.
+    EXPECT_EQ(centerXY - 1, toMapCoordinate(-INTS_PER_SQUARE));
+    EXPECT_EQ(centerXY, toMapCoordinate(1 - INTS_PER_SQUARE));
+    EXPECT_EQ(centerXY, toMapCoordinate(INTS_PER_SQUARE - 1));
+    EXPECT_EQ(centerXY + 1, toMapCoordinate(INTS_PER_SQUARE));
+    EXPECT_EQ(255, toMapCoordinate(INTS_PER_SQUARE * 400));
 }
 
 int main() {
+    testFitInMap();
     testRocks();
     testVisits();
     testObstacles();
@@ -105,6 +217,8 @@ int main() {
     printf("Minimum memory usage by this module: %d bytes.\n",
             (VENUS_MAP_SIZE / 2) * VENUS_MAP_SIZE);
 
-    printf("All tests have completed successfully!\n");
+    if (!g_has_any_test_failure) {
+        printf("All tests have completed successfully!\n");
+    }
     return 0;
 }

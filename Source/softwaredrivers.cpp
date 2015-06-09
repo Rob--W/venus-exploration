@@ -34,10 +34,10 @@ const int pingPin = 9;
 
 void startSetup() 
 {
-	servoLeft.attach(leftservo);
-	servoRight.attach(rightservo);
-	servoUltra.attach(ultraservo, 1300, 1700);
-	servoGrabber.attach(grabberservo, 1300, 1700);
+	servoLeft.attach(leftservo,1300, 1700);
+	servoRight.attach(rightservo, 1300, 1700);
+	servoUltra.attach(ultraservo, 750, 2250);
+	servoGrabber.attach(grabberservo, 750, 2250);
 
 	pinMode(leftencoder, INPUT);
 	pinMode(rightencoder, INPUT);

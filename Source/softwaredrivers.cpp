@@ -27,9 +27,9 @@ Servo servoGrabber;
 #define ultraservo	 11
 #define grabberservo 10
 
-unsigned int DraaiCounter;
-unsigned int Delay;
-unsigned int Duration;
+//unsigned int DraaiCounter;
+//unsigned int Delay;
+//unsigned int Duration;
 
 #define leftencoder	 7
 #define rightencoder 8
@@ -37,7 +37,6 @@ unsigned int Duration;
 
 void startSetup() 
 {
-
 	servoLeft.attach(leftservo, 1300, 1700);
 	servoRight.attach(rightservo, 1300, 1700);
 	servoUltra.attach(ultraservo, 750, 2250);
@@ -47,24 +46,21 @@ void startSetup()
 	pinMode(rightencoder, INPUT);
 	pinMode(US_BOTPIN_O, OUTPUT);
 	pinMode(US_BOTPIN_I, INPUT);
-
 }
 
-
 void calibratespeedFixedDistance(int percentagePower){
-	const int travelDistance = 398;	//400 millimeter
+	const int travelDistance = 392;	//400 millimeter
 	int rightWheelTime;
 	int leftWheelTime;
 
-	int n = round((travelDistance * 16) / (66.5*PI)); //number of pulses needed to drive distance. distance in mm
-	Serial.print("n: ");
-	Serial.println(n);
+	int n = 30;//round((travelDistance * 16) / (66.5*PI)); //number of pulses needed to drive distance. distance in mm
 	bool prevpulseRight = digitalRead(rightencoder);
 	bool prevpulseLeft = digitalRead(leftencoder);
 	int countpulseRight = 0;
 	int countpulseLeft = 0;
 
 	//Drive forward
+	//This can be re written to writeMicroseconds(1700) (100%) writeMicroseconds(1680) (90%) depending on power
 	servoRight.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));	//right backward
 	servoLeft.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));	//left forward
 
@@ -81,7 +77,7 @@ void calibratespeedFixedDistance(int percentagePower){
 			prevpulseLeft = !prevpulseLeft;
 			countpulseLeft++;
 			if (countpulseLeft == n)
-				leftWheelTime = (millis() - beginTime);
+				leftWheelTime = (millis() - beginTime);//speed*WheelForward/backward can be placed here to save space
 		}
 	}
 	stop();
@@ -110,7 +106,6 @@ void calibratespeedFixedDistance(int percentagePower){
 			countpulseRight++;
 			if (countpulseRight == n){
 				rightWheelTime = (millis() - beginTime);
-				servoRight.write(90);
 			}
 		}
 		//counts the spokes of the left wheel

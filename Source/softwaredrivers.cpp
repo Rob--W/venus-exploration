@@ -4,14 +4,17 @@
 
 #define US_BOTPIN_O 4
 #define US_BOTPIN_I 5
+
 #define mmconv				1000.0 //meter times 1000 = mm
 #define IR_RB A0
 #define IR_LB A1
 //  Have to be defined as global variables distance/time=[mm/s]
+
 unsigned int speedRightWheelForward = 0;
 unsigned int speedLeftWheelForward = 0;
 unsigned int speedRightWheelBackward = 0;
 unsigned int speedLeftWheelBackward = 0;
+
 
 Servo servoLeft;
 Servo servoRight;
@@ -36,8 +39,8 @@ void startSetup()
 {
 	servoLeft.attach(leftservo);
 	servoRight.attach(rightservo);
-	servoUltra.attach(ultraservo, 1300, 1700);
-	servoGrabber.attach(grabberservo, 1300, 1700);
+	servoUltra.attach(ultraservo, 540, 2400);
+	servoGrabber.attach(grabberservo, 540, 2400);
 
 	pinMode(leftencoder, INPUT);
 	pinMode(rightencoder, INPUT);
@@ -46,282 +49,86 @@ void startSetup()
 
 }
 
-
-void calibratespeedFixedDistance(int percentagePower){
-	const int travelDistance = 398;	//400 millimeter
-	int rightWheelTime;
-	int leftWheelTime;
-
-	int n = round((travelDistance * 16) / (66.5*PI)); //number of pulses needed to drive distance. distance in mm
-	Serial.print("n: ");
-	Serial.println(n);
-	bool prevpulseRight = digitalRead(rightencoder);
-	bool prevpulseLeft = digitalRead(leftencoder);
-	int countpulseRight = 0;
-	int countpulseLeft = 0;
-	int speed = round((1500 + ((percentagePower) / 100.0) * 100));
-
-	//Drive forward
-	servoRight.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));
-	Serial.println(1500 + ((percentagePower) / 100.0) * 200);
-	servoLeft.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));
-
-	int beginTime = millis();
-	while ((countpulseLeft<n) || (countpulseRight<n)){
-		if ((digitalRead(rightencoder) != prevpulseRight) && countpulseRight <n){
-			prevpulseRight = !prevpulseRight;
-			countpulseRight++;
-			Serial.print("countPulse Right: ");
-			Serial.println(countpulseRight);
-			if (countpulseRight == n)
-				rightWheelTime = (millis() - beginTime);
-		}
-		//counts the spokes of the left wheel
-		if ((digitalRead(leftencoder) != prevpulseLeft) && countpulseLeft <n){
-			prevpulseLeft = !prevpulseLeft;
-			countpulseLeft++;
-			Serial.print("countPulse Left: ");
-			Serial.println(countpulseLeft);
-			if (countpulseLeft == n)
-				leftWheelTime = (millis() - beginTime);
-		}
+int drive(unsigned int distance, int angle)
+{
+	if (angle == 180) {
+		Turn180();
 	}
-	stop();
+	else if (angle > 0) {
+		// left angle
 
-	speedLeftWheelForward = round((travelDistance*mmconv) / leftWheelTime); //speed = travel/time ; travel = (countpulseLeft/16)*66.5*pi;
-	Serial.print("leftWheelTime: ");
-	Serial.print(leftWheelTime);
-	Serial.print("	FLeft:	");
-	Serial.println(speedLeftWheelForward);
-	speedRightWheelBackward = round((travelDistance*mmconv) / rightWheelTime);
-	Serial.print("rightWheelTime: ");
-	Serial.print(rightWheelTime);
-	Serial.print("	BRight:	");
-	Serial.println(speedRightWheelBackward);
+		PLeft(abs(angle) * round(555 / 90));
+	} else if (angle < 0) {
+		// right angle
+		PRight(abs(angle) * round(555 / 90));
+	} 
 
+	return FForward(distance * round(2000.0 / 30));
 
-	//reinitialising variables
-	prevpulseRight = digitalRead(rightencoder);
-	prevpulseLeft = digitalRead(leftencoder);
-	countpulseRight = 0;
-	countpulseLeft = 0;
-	rightWheelTime = -1;
-	leftWheelTime = -1;
+}
+// Full speed forward
+int FForward(long distanceDelay) {
+	// Traveled distance (in cm).
+	int i = 0;
+	int countpulse = 0;
+	bool prevpulse = digitalRead(rightencoder);
+	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
+	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
 
-	//Drive backward
-	servoRight.writeMicroseconds(round(1500 - ((percentagePower) / 100.0) * 200));
-	Serial.println(1500 - ((percentagePower) / 100.0) * 200);
-	servoLeft.writeMicroseconds(round(1500 - ((percentagePower) / 100.0) * 200));
+	Serial.println(distanceDelay);
 
-	beginTime = millis();
-	while ((countpulseLeft<n) || (countpulseRight<n)){
-		//counts the spokes of the right wheel
-		if ((digitalRead(rightencoder) != prevpulseRight) && countpulseRight<n){
-			prevpulseRight = !prevpulseRight;
-			countpulseRight++;
-			if (countpulseRight == n){
-				rightWheelTime = (millis() - beginTime);
-				servoRight.write(90);
+	if (distanceDelay != 0) {
+		//delay(distanceDelay);       
+		/*for (; i < distanceDelay; ++i) {
+			// Loops a distance amount of time, 66.666ms per cm
+			if (checkObstacles())
+				//break;
+			//Serial.println("spam");
+			delay(2000 / 30);
+		}*/
+		//"millis-delay";
+		long t = (millis() + distanceDelay);	//Timestamp + time wallee has to drive
+		while (millis() < (t)){		//while loop that will stay in it for a certain time distanceDelay
+			//IRscan;
+			//Mappen;
+			//Ultratopread
+
+			
+			if (checkObstacles())
+				break;
+		
+			//Spakentellen/Count spokes to find the distance traveled (approximately
+			if (digitalRead(rightencoder) != prevpulse){
+				prevpulse = !prevpulse;
+				countpulse++;
 			}
 		}
-		//counts the spokes of the left wheel
-		if ((digitalRead(leftencoder) != prevpulseLeft) && countpulseLeft<n){
-			prevpulseLeft = !prevpulseLeft;
-			countpulseLeft++;
-			if (countpulseLeft == n)
-				leftWheelTime = (millis() - beginTime);
-		}
+
 	}
 	stop();
-
-	speedLeftWheelBackward = round((travelDistance*mmconv) / leftWheelTime); //speed = travel/time ; travel = (countpulseLeft/16)*66.5*pi
-	Serial.print("leftWheelTime: ");
-	Serial.print(leftWheelTime);
-	Serial.print("	BLeft:	");
-	Serial.println(speedLeftWheelBackward);
-	speedRightWheelForward = round((travelDistance*mmconv) / rightWheelTime);
-	Serial.print("rightWheelTime: ");
-	Serial.print(rightWheelTime);
-	Serial.print("FRight:	");
-	Serial.println(speedRightWheelForward);
-
-}
-
-int calculateAngleDelayLeft(int angle){
-	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
-	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	Serial.print(((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward)*mmconv);
-	return round((((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward))*mmconv); //average speed instead of time (seems to be more exact)
-}
-
-int calculateAngleDelayRight(int angle){
-	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
-	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	Serial.print(((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward)*mmconv);
-	return round((((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward))*mmconv);
-}
-
-int calculateDistanceDelayBackward(int distance){ //distance in mm
-	return round((2*distance*mmconv)/(speedRightWheelBackward+speedLeftWheelForward));
-	//Serial.println(((distance*mmconv) / 2)*((1.0 / speedRightWheelBackward) + (1.0 / speedLeftWheelForward)));
-	//return(((distance*mmconv) / 2)*((1.0 / speedRightWheelBackward) + (1.0 / speedLeftWheelForward)));
-}
-
-int calculateDistanceDelayForward(int distance){ //distance in mm
-	return round((2 * distance*mmconv) / (speedLeftWheelBackward + speedRightWheelForward));
-	//return(((distance*mmconv) / (2 * speedLeftWheelBackward)) + ((distance*mmconv) / (2 * speedRightWheelBackward)));
-	//return(((distance*mmconv) / 2)*((1.0 / speedLeftWheelBackward) + (1.0 / speedRightWheelForward)));
-}
-
-void turnLeft(int percentagePower, int angle){
-	servoLeft.write(round(90 - ((percentagePower / 100.0) * 90)));
-	servoRight.write(round(90 - ((percentagePower / 100.0) * 90)));
-	delay(calculateAngleDelayLeft(angle));
-}
-
-void turnRight(int percentagePower, int angle){
-	servoLeft.write(round(90 + ((percentagePower / 100.0) * 90)));
-	servoRight.write(round(90 + ((percentagePower / 100.0) * 90)));
-	delay(calculateAngleDelayRight(angle));
-}
-
-int Backward(int percentagePower, int distance){ //PERCENTAGEpower is to regulate tire speed, keep at 90. returns distance in centimeter.
-	int i = 0;
-	int countpulse = 0;
-	bool prevpulse = digitalRead(rightencoder);
-	long t = calculateDistanceDelayBackward(distance);
-	Serial.println(t);
-	//Drive forward
-	servoRight.write(round(90 + (90 * (percentagePower / 100.0))));
-	servoLeft.write(round(90 - (90 * (percentagePower / 100.0))));
-
-	long travelTime = millis() + t;
-	while (travelTime>millis()){
-		//fun code
-		//IRscan;
-		//Mappen;
-		//Ultratopread
-		if (checkObstacles())
-			break;
-
-		//Spakentellen/Count spokes to find the distance traveled (approximately
-		if (digitalRead(rightencoder) != prevpulse){
-			prevpulse = !prevpulse;
-			countpulse++;
-		}
-	}
-	stop();
-	return round(countpulse*13.7);
-}
-
-int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to regulate tire speed, keep at 90. returns distance in centimeter.
-	int i = 0;
-	int countpulse = 0;
-	bool prevpulse = digitalRead(rightencoder);
-	long t = calculateDistanceDelayForward(distance);
-	Serial.println(t);
-	//Drive forward
-	servoRight.write(round(90 - (90 * (percentagePower / 100.0))));
-	servoLeft.write(round(90 + (90 * (percentagePower / 100.0))));
-
-	long travelTime = millis() + t;
-	while (travelTime>millis()){
-		//fun code
-		//IRscan;
-		//Mappen;
-		//Ultratopread
-		if (checkObstacles())
-			break;
-
-		//Spakentellen/Count spokes to find the distance traveled (approximately
-		if (digitalRead(rightencoder) != prevpulse){
-			prevpulse = !prevpulse;
-			countpulse++;
-		}
-	}
-	stop();
+	//return (countpulse*distance per spoke=13.7); //return needed for the millis()-delay
 	return (countpulse*13.7);
 }
 
-int drive(unsigned int distance, int angle)
-{
-	if (angle >= 0) {
-		// left angle
-		turnLeft(100, angle);
-		//PLeft(abs(angle) * round(555 / 90));
-	} else if (angle < 0) {
-		// right angle
-		turnRight(100, angle);
-		//PRight(abs(angle) * round(555 / 90));
-	} 
-
-	return philipsForward(100, distance*10);
-		//FForward(distance * round(2000.0 / 30));
+// Turn left in place
+void PLeft(int angleDelay){
+	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
+	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
+	delay(angleDelay);                                // ...for 0.6 seconds (er stond 600)
 }
 
-//// Full speed forward
-//int FForward(long distanceDelay) {
-//	// Traveled distance (in cm).
-//	int i = 0;
-//	int countpulse = 0;
-//	bool prevpulse = digitalRead(rightencoder);
-//	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-//	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-//
-//	Serial.println(distanceDelay);
-//
-//	if (distanceDelay != 0) {
-//		//delay(distanceDelay);       
-//		/*for (; i < distanceDelay; ++i) {
-//			// Loops a distance amount of time, 66.666ms per cm
-//			if (checkObstacles())
-//				//break;
-//			//Serial.println("spam");
-//			delay(2000 / 30);
-//		}*/
-//		//"millis-delay";
-//		long t = (millis() + distanceDelay);	//Timestamp + time wallee has to drive
-//		while (millis() < (t)){		//while loop that will stay in it for a certain time distanceDelay
-//			//IRscan;
-//			//Mappen;
-//			//Ultratopread
-//
-//			
-//			if (checkObstacles())
-//				break;
-//			
-//			//Spakentellen/Count spokes to find the distance traveled (approximately
-//			if (digitalRead(rightencoder) != prevpulse){
-//				prevpulse = !prevpulse;
-//				countpulse++;
-//			}
-//		}
-//
-//	}
-//	stop();
-//	//return (countpulse*distance per spoke=13.7); //return needed for the millis()-delay
-//	return (countpulse*13.7);
-//}
-//
-//// Turn left in place
-//void PLeft(int angleDelay){
-//	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
-//	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-//	delay(angleDelay);                                // ...for 0.6 seconds (er stond 600)
-//}
-//
-//// Turn right in place
-//void PRight(int angleDelay){
-//	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-//	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
-//	delay(angleDelay);                                // ...for 0.6 seconds ( er stond 600)
-//}
-//// Full speed backward
-//void FBack(long distanceDelay){
-//	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
-//	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
-//	delay(distanceDelay);                               // ...for 2 seconds
-//}
+// Turn right in place
+void PRight(int angleDelay){
+	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
+	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
+	delay(angleDelay);                                // ...for 0.6 seconds ( er stond 600)
+}
+// Full speed backward
+void FBack(long distanceDelay){
+	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
+	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
+	delay(distanceDelay);                               // ...for 2 seconds
+}
 
 void Turn180() {
 	servoLeft.writeMicroseconds(1700);

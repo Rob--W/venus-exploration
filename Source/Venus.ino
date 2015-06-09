@@ -131,7 +131,6 @@ void setup()
 	// Set the servo's to their initial positions
 	openGrabber();
 	Serial.println("startsetup");
-	calibratespeedFixedDistance(90);
 	stop();
 	
 	delay(1000);

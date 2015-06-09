@@ -132,6 +132,7 @@ void setup()
 	grabberOpen = true;
 	openGrabber();
 	Serial.println("startsetup");
+	calibratespeedFixedDistance(90);
 	stop();
 
 	// Set the rotating sensor to its center

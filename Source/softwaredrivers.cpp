@@ -7,11 +7,15 @@
 #define mmconv				1000.0 //meter times 1000 = mm
 #define IR_RB A0
 #define IR_LB A1
-//  Have to be defined as global variables distance/time=[mm/s]
-unsigned int speedRightWheelForward = 0;
-unsigned int speedLeftWheelForward = 0;
-unsigned int speedRightWheelBackward = 0;
-unsigned int speedLeftWheelBackward = 0;
+#define motorpower	90		//define percentagepower in drive/philipsforward function
+
+//  Have to be defined as global variables distance/time=[mm/s];	
+//Initial value is actually to low, but it is to make sure that it does not divide by zero on our performance.
+//Forward and backward are defined reletive to the front (grabber) of the robot.
+unsigned int speedRightWheelForward = 140;
+unsigned int speedLeftWheelForward = 140;
+unsigned int speedRightWheelBackward = 140;
+unsigned int speedLeftWheelBackward = 140;
 
 Servo servoLeft;
 Servo servoRight;
@@ -29,16 +33,15 @@ unsigned int Duration;
 
 #define leftencoder	 7
 #define rightencoder 8
-
 #define pingPin		 9
 
 void startSetup() 
 {
 
-	servoLeft.attach(leftservo);
-	servoRight.attach(rightservo);
-	servoUltra.attach(ultraservo, 1300, 1700);
-	servoGrabber.attach(grabberservo, 1300, 1700);
+	servoLeft.attach(leftservo, 1300, 1700);
+	servoRight.attach(rightservo, 1300, 1700);
+	servoUltra.attach(ultraservo, 750, 2250);
+	servoGrabber.attach(grabberservo, 750, 2250);
 
 	pinMode(leftencoder, INPUT);
 	pinMode(rightencoder, INPUT);
@@ -60,20 +63,16 @@ void calibratespeedFixedDistance(int percentagePower){
 	bool prevpulseLeft = digitalRead(leftencoder);
 	int countpulseRight = 0;
 	int countpulseLeft = 0;
-	int speed = round((1500 + ((percentagePower) / 100.0) * 100));
 
 	//Drive forward
-	servoRight.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));
-	Serial.println(1500 + ((percentagePower) / 100.0) * 200);
-	servoLeft.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));
+	servoRight.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));	//right backward
+	servoLeft.writeMicroseconds(round(1500 + ((percentagePower) / 100.0) * 200));	//left forward
 
 	int beginTime = millis();
 	while ((countpulseLeft<n) || (countpulseRight<n)){
 		if ((digitalRead(rightencoder) != prevpulseRight) && countpulseRight <n){
 			prevpulseRight = !prevpulseRight;
 			countpulseRight++;
-			Serial.print("countPulse Right: ");
-			Serial.println(countpulseRight);
 			if (countpulseRight == n)
 				rightWheelTime = (millis() - beginTime);
 		}
@@ -81,8 +80,6 @@ void calibratespeedFixedDistance(int percentagePower){
 		if ((digitalRead(leftencoder) != prevpulseLeft) && countpulseLeft <n){
 			prevpulseLeft = !prevpulseLeft;
 			countpulseLeft++;
-			Serial.print("countPulse Left: ");
-			Serial.println(countpulseLeft);
 			if (countpulseLeft == n)
 				leftWheelTime = (millis() - beginTime);
 		}
@@ -90,15 +87,7 @@ void calibratespeedFixedDistance(int percentagePower){
 	stop();
 
 	speedLeftWheelForward = round((travelDistance*mmconv) / leftWheelTime); //speed = travel/time ; travel = (countpulseLeft/16)*66.5*pi;
-	Serial.print("leftWheelTime: ");
-	Serial.print(leftWheelTime);
-	Serial.print("	FLeft:	");
-	Serial.println(speedLeftWheelForward);
 	speedRightWheelBackward = round((travelDistance*mmconv) / rightWheelTime);
-	Serial.print("rightWheelTime: ");
-	Serial.print(rightWheelTime);
-	Serial.print("	BRight:	");
-	Serial.println(speedRightWheelBackward);
 
 
 	//reinitialising variables
@@ -110,9 +99,8 @@ void calibratespeedFixedDistance(int percentagePower){
 	leftWheelTime = -1;
 
 	//Drive backward
-	servoRight.writeMicroseconds(round(1500 - ((percentagePower) / 100.0) * 200));
-	Serial.println(1500 - ((percentagePower) / 100.0) * 200);
-	servoLeft.writeMicroseconds(round(1500 - ((percentagePower) / 100.0) * 200));
+	servoRight.writeMicroseconds(round(1500 - ((percentagePower) / 100.0) * 200));	//right forward
+	servoLeft.writeMicroseconds(round(1500 - ((percentagePower) / 100.0) * 200));	//left backward
 
 	beginTime = millis();
 	while ((countpulseLeft<n) || (countpulseRight<n)){
@@ -136,40 +124,32 @@ void calibratespeedFixedDistance(int percentagePower){
 	stop();
 
 	speedLeftWheelBackward = round((travelDistance*mmconv) / leftWheelTime); //speed = travel/time ; travel = (countpulseLeft/16)*66.5*pi
-	Serial.print("leftWheelTime: ");
-	Serial.print(leftWheelTime);
-	Serial.print("	BLeft:	");
-	Serial.println(speedLeftWheelBackward);
 	speedRightWheelForward = round((travelDistance*mmconv) / rightWheelTime);
-	Serial.print("rightWheelTime: ");
-	Serial.print(rightWheelTime);
-	Serial.print("FRight:	");
-	Serial.println(speedRightWheelForward);
 
 }
 
-int calculateAngleDelayLeft(int angle){
+int calculateAngleDelayLeft(int angle){	//counterclockwise turning (tegen de klok in als je van boven naar de grond kijkt)
 	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
 	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	Serial.print(((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward)*mmconv);
-	return round((((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward))*mmconv); //average speed instead of time (seems to be more exact)
+	//Serial.print(((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward)*mmconv);
+	return round((((105 * PI*angle) / 180) / (speedRightWheelForward + speedLeftWheelBackward))*mmconv); //average speed instead of time (seems to be more accurate)
 }
 
-int calculateAngleDelayRight(int angle){
+int calculateAngleDelayRight(int angle){	//clockwise turning (met de klok mee in als je van boven naar de grond kijkt)
 	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
 	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	Serial.print(((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward)*mmconv);
-	return round((((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward))*mmconv);
+	//Serial.print(((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward)*mmconv);
+	return round((((105 * PI*angle) / 180) / (speedLeftWheelForward + speedRightWheelBackward))*mmconv);	//average speed instead of time (seems to be more accurate)
 }
 
 int calculateDistanceDelayBackward(int distance){ //distance in mm
-	return round((2*distance*mmconv)/(speedRightWheelBackward+speedLeftWheelForward));
+	return round((2*distance*mmconv)/(speedRightWheelBackward+speedLeftWheelBackward));
 	//Serial.println(((distance*mmconv) / 2)*((1.0 / speedRightWheelBackward) + (1.0 / speedLeftWheelForward)));
 	//return(((distance*mmconv) / 2)*((1.0 / speedRightWheelBackward) + (1.0 / speedLeftWheelForward)));
 }
 
 int calculateDistanceDelayForward(int distance){ //distance in mm
-	return round((2 * distance*mmconv) / (speedLeftWheelBackward + speedRightWheelForward));
+	return round((2 * distance*mmconv) / (speedLeftWheelForward + speedRightWheelForward));
 	//return(((distance*mmconv) / (2 * speedLeftWheelBackward)) + ((distance*mmconv) / (2 * speedRightWheelBackward)));
 	//return(((distance*mmconv) / 2)*((1.0 / speedLeftWheelBackward) + (1.0 / speedRightWheelForward)));
 }
@@ -190,13 +170,11 @@ int Backward(int percentagePower, int distance){ //PERCENTAGEpower is to regulat
 	int i = 0;
 	int countpulse = 0;
 	bool prevpulse = digitalRead(rightencoder);
-	long t = calculateDistanceDelayBackward(distance);
-	Serial.println(t);
 	//Drive forward
 	servoRight.write(round(90 + (90 * (percentagePower / 100.0))));
 	servoLeft.write(round(90 - (90 * (percentagePower / 100.0))));
 
-	long travelTime = millis() + t;
+	long travelTime = millis() + calculateDistanceDelayBackward(distance);
 	while (travelTime>millis()){
 		//fun code
 		//IRscan;
@@ -219,13 +197,11 @@ int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to r
 	int i = 0;
 	int countpulse = 0;
 	bool prevpulse = digitalRead(rightencoder);
-	long t = calculateDistanceDelayForward(distance);
-	Serial.println(t);
 	//Drive forward
 	servoRight.write(round(90 - (90 * (percentagePower / 100.0))));
 	servoLeft.write(round(90 + (90 * (percentagePower / 100.0))));
 
-	long travelTime = millis() + t;
+	long travelTime = millis() + calculateDistanceDelayForward(distance);
 	while (travelTime>millis()){
 		//fun code
 		//IRscan;
@@ -248,15 +224,15 @@ int drive(unsigned int distance, int angle)
 {
 	if (angle >= 0) {
 		// left angle
-		turnLeft(100, angle);
+		turnLeft(motorpower, angle);
 		//PLeft(abs(angle) * round(555 / 90));
 	} else if (angle < 0) {
 		// right angle
-		turnRight(100, angle);
+		turnRight(motorpower, -angle);
 		//PRight(abs(angle) * round(555 / 90));
 	} 
 
-	return philipsForward(100, distance*10);
+	return philipsForward(motorpower, distance*10);
 		//FForward(distance * round(2000.0 / 30));
 }
 

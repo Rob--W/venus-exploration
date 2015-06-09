@@ -145,7 +145,19 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	initiateDrive();
+	drive(100, 0);
+	delay(2000);
+	drive(0, 60);
+	delay(2000);
+	drive(200, 120);
+	delay(2000);
+	drive(0, -90);
+	delay(2000);
+	drive(100, -90);
+	delay(2000);
+	drive(0, 0);
+	delay(2000);
+	//initiateDrive();
 }
 
 // Routine for the obstacle functions and things that needs to be handled

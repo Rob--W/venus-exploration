@@ -134,6 +134,7 @@ void setup()
 	Serial.println("startsetup");
 	stop();
 
+	// Set the rotating sensor to its center
 	readUltraTop(USSERVO_OFFSET);
 	
 	delay(1000);
@@ -150,7 +151,7 @@ void loop()
 // during the driving procedure
 bool checkObstacles()
 {
-	
+	// Disable crash detection when reversing path
 	if (bottomCrashDetection)
 	{
 		// Simple (placeholder) collission detection
@@ -176,9 +177,6 @@ bool checkObstacles()
 // Start from lab
 void initiateDrive()
 {
-	if (loopCounter > 2)
-		reversePath();
-
 	// Create our working path
 	path newPath;
 	
@@ -223,7 +221,7 @@ void initiateDrive()
 		// Set the new data into the path
 		newPath.angle = 0;
 		// The SAFE_ROCK_DISTANCE makes sure the object will be within the grabbers if the robot moves to the right direction
-		newPath.distance = readUltraBot() + SAFE_ROCK_DISTANCE;
+		newPath.distance = readUltraBot() - SAFE_DISTANCE;
 
 	}
 	else {
@@ -249,7 +247,7 @@ void initiateDrive()
 	// Because we haven't driven to our objective, we will not add visits yet. 
 
 	// First check if we have already been there
-	if (getVisits(x, y) <= INTEREST_THRESHOLD)
+	if (getVisits(x, y) <= INTEREST_THRESHOLD || hasObstacle(x, y) == true)
 	{
 		// Interesting enough to look further
 
@@ -362,8 +360,38 @@ void initiateDrive()
 			crashCause = NONE;
 			break;
 		}
-	}
 
+
+	}
+	// Hasn't he found the rock yet?
+	if (foundRock)
+	{
+		// The rock has not been found
+		searchRock();
+
+		// Check whether the rock has been found
+		if (readUltraBot() < SAFE_ROCK_DISTANCE)
+		{
+			// Grab the rock
+			grabberOpen = false;
+			closeGrabber();
+			// Return to the base
+			reversePath();
+			// And drop it right there
+			// TODO: the IR sensors need to be implemented here
+			// TODO: Backup navigation to the base must also be implemented
+			delay(1000);
+			grabberOpen = true;
+			openGrabber();
+
+			// Prevent reboot due power constraints
+			delay(1000);
+		}
+		else {
+			// Nothing found, or rock already returned
+			foundRock = false;
+		}
+	}
 	// Reset the crash
 	crashed = false;
 	++loopCounter;
@@ -981,23 +1009,28 @@ void searchRock()
 {
 	path grabRock;
 
+	// Check if the rock isn't already in front of the robot
 	unsigned int distance = readUltraBot();
 
 	// First scan straight forward 
 	if (distance < SAFE_DISTANCE)
 	{
+		// If something is within range, set a new waypoint
 		grabRock.distance = distance;
 		grabRock.angle = 0;
 
 		setPath(grabRock);
 
+		// And drive to it (no feedback (yet))
 		drive(grabRock.distance, grabRock.angle);
 
+		// Function done, initiateDrive does the grabbing part
 		return;
 	}
 	else {
 		int i = 0;
 
+		// Run until the thing is not within range
 		while (readUltraBot() > SAFE_DISTANCE)
 		{
 			if (i < 9)
@@ -1015,15 +1048,19 @@ void searchRock()
 
 			delay(200);
 
+			// Check if the rock is in sight
 			if (readUltraBot() < SAFE_DISTANCE)
 			{
+				// And set the data for the next waypoint
 				grabRock.distance = distance;
 				grabRock.angle = 0;
 
 				setPath(grabRock);
 
+				// Drive to it (no feedback (yet))
 				drive(grabRock.distance, grabRock.angle);
 
+				// Let the initiateDrive function solve the rest (grabbing and shit)
 				return;
 			}
 		}

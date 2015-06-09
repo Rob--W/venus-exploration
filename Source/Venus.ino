@@ -86,7 +86,7 @@ unsigned int dodgeCounter = 0;
 bool grabberOpen = false;
 bool holdsRock = false;
 bool foundRock = false;
-
+bool bottomCrashDetection = true;
 // tracking variables for forbidden moves
 int forbiddenAngle = NULL;
 
@@ -129,9 +129,12 @@ void setup()
 	startSetup();
 
 	// Set the servo's to their initial positions
+	grabberOpen = true;
 	openGrabber();
 	Serial.println("startsetup");
 	stop();
+
+	readUltraTop(USSERVO_OFFSET);
 	
 	delay(1000);
 }
@@ -147,27 +150,35 @@ void loop()
 // during the driving procedure
 bool checkObstacles()
 {
-	// Simple (placeholder) collission detection
-	if (!One())
+	
+	if (bottomCrashDetection)
 	{
-		crashCause = US_TOP;
-		crashed = true;
+		// Simple (placeholder) collission detection
+		if (!One())
+		{
+			crashCause = US_TOP;
+			return true;
+		}
+
+		if (readUltraBot() < SAFE_ROCK_DISTANCE && BOTTOM_US_SENSOR)
+		{
+			Serial.println("Block found");
+			crashCause = ROCK;
+			return true;
+		}
 	}
 
-	if (readUltraBot() < SAFE_ROCK_DISTANCE && BOTTOM_US_SENSOR && !foundRock)
-	{
-		Serial.println("Block found");
-		crashCause = ROCK;
-		crashed = true;
-	}
 
 	// Return true when everything is ok
-	return crashed;
+	return false;
 }
 
 // Start from lab
 void initiateDrive()
 {
+	if (loopCounter > 2)
+		reversePath();
+
 	// Create our working path
 	path newPath;
 	
@@ -289,7 +300,22 @@ void initiateDrive()
 
 	// We'd like to know if the full path has been driven, if not, the last waypoint needs to be changed
 	DistanceType drivenDistance = drive(newPath.distance, newPath.angle);
+	Serial.print("Distance driven: ");
+	Serial.println(drivenDistance);
 	delay(1000);
+
+	// Do some waypoint management
+
+	// Merge the two waypoints
+	newPath.angle = paths[currentPathID - 2].angle;
+	newPath.distance = paths[currentPathID - 1].distance;
+
+	// Remove the obsolete ones
+	removePath(currentPathID - 1);
+	removePath(currentPathID - 1);
+
+	// And add the merged one again
+	setPath(newPath);
 
 	// If the driven distance appears to be less than we wanted
 	if (drivenDistance < newPath.distance)
@@ -321,13 +347,15 @@ void initiateDrive()
 
 		case ROCK:
 			// Grab the rock
-			closeGrabber();
 			foundRock = true;
+			grabberOpen = false;
+			closeGrabber();
 			// Return to the base
 			reversePath();
 			// And drop it right there
 			// TODO: the IR sensors need to be implemented here
 			// TODO: Backup navigation to the base must also be implemented
+			grabberOpen = true;
 			openGrabber();
 			
 			foundRock = false;
@@ -433,6 +461,7 @@ void changePath(unsigned int pathID, unsigned int distance = NULL, int angle = N
 // Return to the lab by reversing the path array
 void reversePath()
 {
+	bottomCrashDetection = false;
 	// Some serial checkings...
 	Serial.println("Returning to base: ");
 
@@ -480,6 +509,8 @@ void reversePath()
 	Serial.println("Done!");
 
 	delay(1000);
+
+	bottomCrashDetection = true;
 }
 
 // Compute desired angles for the top US-sensor and store the measured data so that it can be used by other functions

@@ -442,7 +442,7 @@ bool setPath(path newPath)
 // Removes indexed path from the array, and resolving empty slots if necessary
 bool removePath(unsigned int pathID)
 {
-	if (pathID = currentPathID - 1)
+	if (pathID == currentPathID - 1)
 	{
 		// We want to remove the last item in the list
 		--currentPathID;
@@ -580,7 +580,7 @@ void scanSurroundings()
 	int angle = -90;
 
 	// Check whether the wanted number of samples is legit and calculate the steps required
-	if (angleStep = (180 % (SAMPLES - 1)) != 0)
+	if ((180 % (SAMPLES - 1)) != 0)
 		angleStep = 30;
 	else
 		angleStep = 180 / (SAMPLES - 1);
@@ -1060,7 +1060,7 @@ void searchRock()
 			{
 				drive(0, -10);
 			}
-			else if (i = 9)
+			else if (i == 9)
 			{
 				drive(0, 90);
 			}

@@ -486,7 +486,7 @@ bool removePath(unsigned int pathID)
 void changePath(unsigned int pathID, unsigned int distance = NULL, int angle = NULL, byte mapX = NULL, byte mapY = NULL)
 {
 	// Replace the data if it has been changed
-	if (distance >= 0 && distance != NULL) {
+	if (distance != NULL) {
 		paths[pathID].distance = distance;
 
 		//Re-calculate the relative coordinates

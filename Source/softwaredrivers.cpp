@@ -148,7 +148,6 @@ void turnRight(int percentagePower, int angle){
 }
 
 int Backward(int percentagePower, int distance){ //PERCENTAGEpower is to regulate tire speed, keep at 90. returns distance in centimeter.
-	int i = 0;
 	int countpulse = 0;
 	bool prevpulse = digitalRead(rightencoder);
 	//Drive forward
@@ -173,7 +172,6 @@ int Backward(int percentagePower, int distance){ //PERCENTAGEpower is to regulat
 }
 
 int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to regulate tire speed, keep at 90. returns distance in centimeter.
-	int i = 0;
 	int countpulse = 0;
 	bool prevpulse = digitalRead(rightencoder);
 	//Drive forward

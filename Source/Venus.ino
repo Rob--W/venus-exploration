@@ -512,37 +512,36 @@ void reversePath()
 
 	delay(2000);
 
+	if (currentPathID > 0) {
+		// Turn around and drive the set distance
+		Serial.print(paths[currentPathID - 1].distance);
+		Serial.print(" - ");
+		Serial.println(180);
+
+		drive(paths[currentPathID - 1].distance, 180);
+
+		// Give it time to turn around
+		delay(1000);
+	}
+
 	// Revert path, i to 0 to stop at the point before the base
-	for (int i = currentPathID - 1; i >= 0; --i)
+	for (int i = currentPathID - 2; i > 0; --i)
 	{
 		Serial.print(i);
 		Serial.print(" - ");
 
-		if (i == currentPathID - 1) {
-			// Turn around and drive the set distance
-			Serial.print(paths[i].distance);
-			Serial.print(" - ");
-			Serial.println(180);
-
-			drive(paths[i].distance, 180);
-
-			// Give it time to turn around
-			delay(1000);
-		}
-		else if (i == 0) {
-			Serial.print(paths[i].distance);
-			Serial.print(" - ");
-			Serial.println(-paths[i + 1].angle);
-			drive(paths[i].distance, -paths[i+1].angle);
-		}
-		else {
-			Serial.print(paths[i].distance);
-			Serial.print(" - ");
-			Serial.println(-paths[i+1].angle);
-			drive(paths[i].distance, -paths[i + 1].angle);
-		}
+		Serial.print(paths[i].distance);
+		Serial.print(" - ");
+		Serial.println(-paths[i+1].angle);
+		drive(paths[i].distance, -paths[i + 1].angle);
 
 		delay(1000);
+	}
+	if (currentPathID > 1) {
+		Serial.print(paths[0].distance);
+		Serial.print(" - ");
+		Serial.println(-paths[1].angle);
+		drive(paths[0].distance, -paths[1].angle);
 	}
 	Serial.print("-1");
 	Serial.print(" - ");

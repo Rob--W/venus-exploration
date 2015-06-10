@@ -145,19 +145,7 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	drive(0, 0);
-	delay(2000);
-	drive(0, 60);
-	delay(2000);
-	drive(00, 120);
-	delay(2000);
-	drive(0, -90);
-	delay(2000);
-	drive(00, -90);
-	delay(2000);
-	drive(0, 0);
-	delay(2000);
-	//initiateDrive();
+	initiateDrive();
 }
 
 // Routine for the obstacle functions and things that needs to be handled
@@ -622,7 +610,7 @@ void scanSurroundings()
 	}
 	
 	// look straight ahead
-	readUltraTop(90); 
+	readUltraTop(USSERVO_OFFSET); 
 }
 
 // Calculate the shortest path between to given points. Returned path is drive ready.
@@ -1069,8 +1057,8 @@ void searchRock()
 
 			delay(200);
 
-			// Check if the rock is in sight
-			if (readUltraBot() < SAFE_DISTANCE)
+			// Check if the rock is in sight and whether it is a block
+			if (readUltraBot() < readUltraTop(USSERVO_OFFSET) - 1)
 			{
 				// And set the data for the next waypoint
 				grabRock.distance = distance;

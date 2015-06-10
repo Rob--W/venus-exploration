@@ -46,7 +46,7 @@ int readIRGrab();		//Reads IR Grabber. Return unit to be determined
 
 int readLightSense();	//Reads Light Sensor. Return unit to be determined
 
-int readUltraTop(int angle);		//Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
+unsigned int readUltraTop(int angle);		//Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
 
 unsigned int readUltraBot(); //Reads bottom Ultrasonic sensor. Return unit is a distance.
 

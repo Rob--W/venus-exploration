@@ -263,7 +263,7 @@ colour readirrb()                         //reads ir right bottom. return unit t
 		return OTHER;
 }
 
-int microsecondsToCentimeters(int microseconds)
+unsigned int microsecondsToCentimeters(unsigned int microseconds)
 {
 	// The speed of sound is 340 m/s or 29 microseconds per centimeter.
 	// The ping travels out and back, so to find the distance of the
@@ -271,12 +271,12 @@ int microsecondsToCentimeters(int microseconds)
 	return microseconds / 29 / 2;
 }
 
-int readUltraTop(int angle)  //Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
+unsigned int readUltraTop(int angle)  //Reads Top Ultrasonic sensor. Return unit is a distance. Input parameter is a angle; full left is angle 0 degrees full right is 180 degrees
 {		
 	servoUltra.write(180 - angle);
 	// establish variables for duration of the ping, 
-	// and the distance result in inches and centimeters:
-	int duration, inches, cm;
+	// and the distance result in centimeters:
+	unsigned int duration, cm;
 
 	// The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
 	// Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
@@ -296,8 +296,6 @@ int readUltraTop(int angle)  //Reads Top Ultrasonic sensor. Return unit is a dis
 	// convert the time into a distance
 	cm = microsecondsToCentimeters(duration);
 	/*
-	Serial.print(inches);
-	Serial.print("in, ");
 	Serial.print(cm);
 	Serial.print("cm");
 	Serial.println();

@@ -45,11 +45,11 @@ void startSetup()
 }
 
 void calibratespeedFixedDistance(int percentagePower){
-	const int travelDistance = 392;	//400 millimeter
+	const int travelDistance = 396;	//400 millimeter
 	int rightWheelTime;
 	int leftWheelTime;
 
-	int n = 30;//round((travelDistance * 16) / (66.5*PI)); //number of pulses needed to drive distance. distance in mm
+	int n = 31;//round((travelDistance * 16) / (66.5*PI)); //number of pulses needed to drive distance. distance in mm
 	bool prevpulseRight = digitalRead(rightencoder);
 	bool prevpulseLeft = digitalRead(leftencoder);
 	int countpulseRight = 0;
@@ -224,7 +224,6 @@ void stop(){ //Stop function, makes the robot stop driving (if the servo's are p
 	servoLeft.writeMicroseconds(1500);         // Pin 13 stay still
 	servoRight.writeMicroseconds(1500);        // Pin 12 stay still
 }
-
 
 int readIRMid(){ //reads Middle IR. Return unit to be determined
 

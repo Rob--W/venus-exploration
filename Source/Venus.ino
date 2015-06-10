@@ -145,15 +145,15 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	drive(100, 0);
+	drive(0, 0);
 	delay(2000);
 	drive(0, 60);
 	delay(2000);
-	drive(200, 120);
+	drive(00, 120);
 	delay(2000);
 	drive(0, -90);
 	delay(2000);
-	drive(100, -90);
+	drive(00, -90);
 	delay(2000);
 	drive(0, 0);
 	delay(2000);

@@ -457,21 +457,15 @@ bool removePath(unsigned int pathID)
 		if (currentPathID >= PATH_ENTRIES)
 			return false;
 
-		// Empty the indexed slot
-		paths[pathID].distance = 0;
-		paths[pathID].angle = 0;
-
-		path temp;
-
-		// Everything is safe, start swapping from the removed item to the last added item
-		for (int i = 0; i < currentPathID - pathID; ++i)
+		// Everything is safe, move all items.
+		for (unsigned int i = pathID; i < currentPathID; ++i)
 		{
-			// pathID has just been emptied, so lets start right there
-			// swappedy swap!
-			temp = paths[i + pathID];
-			paths[i + pathID] = paths[i + pathID + 1];
-			paths[i + pathID + 1] = temp;
+			paths[i] = paths[i + 1];
 		}
+
+		// Empty the last slot
+		paths[currentPathID].distance = 0;
+		paths[currentPathID].angle = 0;
 		
 		// And substract one from the arraycounter for the next addition
 		--currentPathID;

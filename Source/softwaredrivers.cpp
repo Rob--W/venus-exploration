@@ -27,10 +27,6 @@ Servo servoGrabber;
 #define ultraservo	 11
 #define grabberservo 10
 
-//unsigned int DraaiCounter;
-//unsigned int Delay;
-//unsigned int Duration;
-
 #define leftencoder	 7
 #define rightencoder 8
 #define pingPin		 9
@@ -124,29 +120,19 @@ void calibratespeedFixedDistance(int percentagePower){
 }
 
 int calculateAngleDelayLeft(int angle){	//counterclockwise turning (tegen de klok in als je van boven naar de grond kijkt)
-	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
-	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	//Serial.print(((105 * PI*angle) / 180) / (speedRightWheelBackward + speedLeftWheelBackward)*mmconv);
 	return round((((105 * PI*angle) / 180) / (speedRightWheelForward + speedLeftWheelBackward))*mmconv); //average speed instead of time (seems to be more accurate)
 }
 
 int calculateAngleDelayRight(int angle){	//clockwise turning (met de klok mee in als je van boven naar de grond kijkt)
-	//Serial.print(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2) * 1000); // time for right wheel and left wheel averaged.(tR+tL)/2
-	//return(((((105 * PI*angle) / (360 * speedRightWheelForward)) + ((105 * PI*angle) / (360 * speedRightWheelForward))) / 2)*1000);
-	//Serial.print(((105 * PI*angle) / 180) / (speedLeftWheelBackward + speedRightWheelBackward)*mmconv);
 	return round((((105 * PI*angle) / 180) / (speedLeftWheelForward + speedRightWheelBackward))*mmconv);	//average speed instead of time (seems to be more accurate)
 }
 
 int calculateDistanceDelayBackward(int distance){ //distance in mm
 	return round((2*distance*mmconv)/(speedRightWheelBackward+speedLeftWheelBackward));
-	//Serial.println(((distance*mmconv) / 2)*((1.0 / speedRightWheelBackward) + (1.0 / speedLeftWheelForward)));
-	//return(((distance*mmconv) / 2)*((1.0 / speedRightWheelBackward) + (1.0 / speedLeftWheelForward)));
 }
 
 int calculateDistanceDelayForward(int distance){ //distance in mm
 	return round((2 * distance*mmconv) / (speedLeftWheelForward + speedRightWheelForward));
-	//return(((distance*mmconv) / (2 * speedLeftWheelBackward)) + ((distance*mmconv) / (2 * speedRightWheelBackward)));
-	//return(((distance*mmconv) / 2)*((1.0 / speedLeftWheelBackward) + (1.0 / speedRightWheelForward)));
 }
 
 void turnLeft(int percentagePower, int angle){
@@ -170,11 +156,9 @@ int Backward(int percentagePower, int distance){ //PERCENTAGEpower is to regulat
 	servoLeft.write(round(90 - (90 * (percentagePower / 100.0))));
 
 	long travelTime = millis() + calculateDistanceDelayBackward(distance);
+	//this part is used in multiple functions. can be shortend
 	while (travelTime>millis()){
 		//fun code
-		//IRscan;
-		//Mappen;
-		//Ultratopread
 		if (checkObstacles())
 			break;
 
@@ -199,9 +183,6 @@ int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to r
 	long travelTime = millis() + calculateDistanceDelayForward(distance);
 	while (travelTime>millis()){
 		//fun code
-		//IRscan;
-		//Mappen;
-		//Ultratopread
 		if (checkObstacles())
 			break;
 
@@ -231,70 +212,6 @@ int drive(unsigned int distance, int angle)
 		//FForward(distance * round(2000.0 / 30));
 }
 
-//// Full speed forward
-//int FForward(long distanceDelay) {
-//	// Traveled distance (in cm).
-//	int i = 0;
-//	int countpulse = 0;
-//	bool prevpulse = digitalRead(rightencoder);
-//	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-//	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-//
-//	Serial.println(distanceDelay);
-//
-//	if (distanceDelay != 0) {
-//		//delay(distanceDelay);       
-//		/*for (; i < distanceDelay; ++i) {
-//			// Loops a distance amount of time, 66.666ms per cm
-//			if (checkObstacles())
-//				//break;
-//			//Serial.println("spam");
-//			delay(2000 / 30);
-//		}*/
-//		//"millis-delay";
-//		long t = (millis() + distanceDelay);	//Timestamp + time wallee has to drive
-//		while (millis() < (t)){		//while loop that will stay in it for a certain time distanceDelay
-//			//IRscan;
-//			//Mappen;
-//			//Ultratopread
-//
-//			
-//			if (checkObstacles())
-//				break;
-//			
-//			//Spakentellen/Count spokes to find the distance traveled (approximately
-//			if (digitalRead(rightencoder) != prevpulse){
-//				prevpulse = !prevpulse;
-//				countpulse++;
-//			}
-//		}
-//
-//	}
-//	stop();
-//	//return (countpulse*distance per spoke=13.7); //return needed for the millis()-delay
-//	return (countpulse*13.7);
-//}
-//
-//// Turn left in place
-//void PLeft(int angleDelay){
-//	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
-//	servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-//	delay(angleDelay);                                // ...for 0.6 seconds (er stond 600)
-//}
-//
-//// Turn right in place
-//void PRight(int angleDelay){
-//	servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-//	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
-//	delay(angleDelay);                                // ...for 0.6 seconds ( er stond 600)
-//}
-//// Full speed backward
-//void FBack(long distanceDelay){
-//	servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
-//	servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
-//	delay(distanceDelay);                               // ...for 2 seconds
-//}
-
 void Turn180() {
 	servoLeft.writeMicroseconds(1700);
 	servoRight.writeMicroseconds(1700);
@@ -303,25 +220,21 @@ void Turn180() {
 	stop();
 }
 
-void stop() //Stop function, makes the robot stop driving (if the servo's are properly set)
-{
+void stop(){ //Stop function, makes the robot stop driving (if the servo's are properly set)
 	servoLeft.writeMicroseconds(1500);         // Pin 13 stay still
 	servoRight.writeMicroseconds(1500);        // Pin 12 stay still
 }
 
 
-int readIRMid() //reads Middle IR. Return unit to be determined
-{
+int readIRMid(){ //reads Middle IR. Return unit to be determined
 
 }
 
-int readIRGrab()    //Reads IR Grabber. Return unit to be determined;
-{		
+int readIRGrab(){    //Reads IR Grabber. Return unit to be determined;
 
 }
 
-int readLightSense()                   //Reads Light Sensor. Return unit to be determined
-{	
+int readLightSense(){                 //Reads Light Sensor. Return unit to be determined
 
 }
 
@@ -337,7 +250,6 @@ colour readirlb()                         //reads ir left bottom. return unit to
 	else
 		return OTHER;
 }
-
 
 colour readirrb()                         //reads ir right bottom. return unit to be determined;  Threshold: 950 is black. grey 890, black 990, white < 800
 {
@@ -426,15 +338,11 @@ int readUltraBot()
 	delay(100);
 	return cm - 2;
 }
-void openGrabber()
-{
-	//servoGrabber.attach(grabberservo);
+
+void openGrabber(){
 	servoGrabber.write(0);
-	//servoGrabber.detach();
 }
-void closeGrabber()
-{
-	// servoGrabber.attach(grabberservo);
+
+void closeGrabber(){
 	servoGrabber.write(180);
-	//servoGrabber.detach();
 }

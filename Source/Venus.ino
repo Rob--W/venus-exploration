@@ -479,6 +479,11 @@ bool removePath(unsigned int pathID)
 // Can be used to change paths in case of a obstacle
 void changePath(unsigned int pathID, unsigned int distance = NULL, int angle = NULL, byte mapX = NULL, byte mapY = NULL)
 {
+	// TODO(rob): The code below assumes that both of the following are true:
+	// - pathID < PATH_ENTRIES
+	// - currentPathID < PATH_ENTRIES
+	// VERIFY that this is really true.
+
 	// Replace the data if it has been changed
 	if (distance != NULL) {
 		paths[pathID].distance = distance;

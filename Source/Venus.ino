@@ -658,6 +658,7 @@ path shortestPath(unsigned int from, unsigned int to)
 		// Repeatedly add the conversions from polar to cartesian
 		for (int i = from; i - from <= pathDistance; ++i)
 		{
+			// TODO(rob): Check whether i - from is AT MOST PATH_ENTRIES.
 			// Calculate absolute angle
 			angle += (paths[i].angle);
 			distance = paths[i].distance;
@@ -761,6 +762,7 @@ int toCartesian(path pCoordinate, byte index, bool useX)
 
 	// Get the absolute angle 
 	for (int i = 0; i < index + 1; ++i)
+		// TODO(rob): Check whether index is AT MOST 'PATH_ENTRIES - 1'.
 		angle += paths[i].angle;
 
 	// Convert polar to coordinates

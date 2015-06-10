@@ -306,11 +306,11 @@ int readUltraTop(int angle)  //Reads Top Ultrasonic sensor. Return unit is a dis
 	return cm;
 }
 
-int readUltraBot()
+unsigned int readUltraBot()
 {
 	// establish variables for duration of the ping, 
-	// and the distance result in inches and centimeters:
-	int duration, inches, cm;
+	// and the distance result in centimeters:
+	unsigned int duration, cm;
 
 	// The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
 	// Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
@@ -328,13 +328,16 @@ int readUltraBot()
 	// convert the time into a distance
 	cm = microsecondsToCentimeters(duration);
 
-	//Serial.print(inches);
-	//Serial.print("in, ");
 	//Serial.print(cm);
 	//Serial.print("cm");
 	//Serial.println();
 
 	delay(100);
+	if (cm < 2) {
+		// This is not possible, but when it happens, return 0 instead of
+		// an underflown number.
+		return 0;
+	}
 	return cm - 2;
 }
 

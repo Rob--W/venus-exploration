@@ -233,18 +233,28 @@ void initiateDrive()
 
 		// Set the new data into the path
 		newPath.angle = 0;
-		// The SAFE_ROCK_DISTANCE makes sure the object will be within the grabbers if the robot moves to the right direction
-		newPath.distance = readUltraBot() - SAFE_DISTANCE;
+		newPath.distance = readUltraBot();
 
 	}
 	else {
 		Serial.println("No difference found");
 		// Set the new data into the path
 		newPath.angle = 0;
-		// And make sure the robot stops at a safe distance from the found object
-		newPath.distance = distance - SAFE_DISTANCE;
+		newPath.distance = distance;
 	}
 	
+	if (newPath.distance > SAFE_DISTANCE) {
+		// SAFE_DISTANCE ensures that the robot stops close to the target.
+		// E.g. the rock will be in the grappers when the robot stops.
+		newPath.distance -= SAFE_DISTANCE;
+	} else {
+		// This case shouldn't happen. It means that the top sensor measured
+		// a distance that is smaller than the bottom sensor. This could be an
+		// indication of a bad measurement or a blinded top sensor.
+		newPath.distance = 0;
+		newPath.angle = 180;
+	}
+
 	// Save the path
 	setPath(newPath);
 	

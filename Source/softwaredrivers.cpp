@@ -206,7 +206,7 @@ int drive(unsigned int distance, int angle)
 		//PRight(abs(angle) * round(555 / 90));
 	} 
 
-	return philipsForward(motorpower, distance*10);
+	return philipsForward(motorpower, distance*100);
 		//FForward(distance * round(2000.0 / 30));
 }
 

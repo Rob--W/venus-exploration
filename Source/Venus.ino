@@ -145,7 +145,7 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	drive(0, 0);
+	drive(100, 0);
 	delay(2000);
 	drive(0, 60);
 	delay(2000);
@@ -225,7 +225,7 @@ void initiateDrive()
 	Serial.println(distance);
 
 	// Check if there is a difference
-	if (readUltraBot() < distance - 1 && BOTTOM_US_SENSOR)
+	if ((readUltraBot() < distance - 1) && BOTTOM_US_SENSOR)
 	{
 		// Found rock
 		Serial.println("Rock found");
@@ -369,8 +369,10 @@ void initiateDrive()
 		case ROCK:
 			// Grab the rock
 			foundRock = true;
-			grabberOpen = false;
-			closeGrabber();
+			if (grabberOpen){
+				closeGrabber();
+				grabberOpen = false;
+			}
 			// Return to the base
 			reversePath();
 			// And drop it right there

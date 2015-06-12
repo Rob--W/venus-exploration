@@ -30,6 +30,8 @@ Servo servoGrabber;
 #define leftencoder	 7
 #define rightencoder 8
 #define pingPin		 9
+ 
+
 
 void startSetup() 
 {
@@ -42,6 +44,10 @@ void startSetup()
 	pinMode(rightencoder, INPUT);
 	pinMode(US_BOTPIN_O, OUTPUT);
 	pinMode(US_BOTPIN_I, INPUT);
+}
+
+void ServoUturn(int angle){
+	servoUltra.write(angle);
 }
 
 void calibratespeedFixedDistance(int percentagePower){
@@ -346,6 +352,6 @@ void openGrabber(){
 
 void closeGrabber(){
 	servoGrabber.attach(grabberservo, 750, 2250);
-	servoGrabber.write(170);
+	servoGrabber.write(180);
 	delay(1000);
 }

@@ -125,7 +125,7 @@ void setup()
 	grabberOpen = true;
 	openGrabber();
 	Serial.println("startsetup");
-	//calibratespeedFixedDistance(90);
+	calibratespeedFixedDistance(90);
 	stop();
 
 	// Set the rotating sensor to its center
@@ -401,7 +401,7 @@ void initiateDrive()
 			openGrabber();
 
 			// Prevent reboot due power constraints
-			delay(1000);
+			delay(10000);
 		}
 		else {
 			// Nothing found, or rock already returned

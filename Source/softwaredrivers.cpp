@@ -8,6 +8,8 @@
 #define IR_RB A0
 #define IR_LB A1
 #define motorpower	90		//define percentagepower in drive/philipsforward function
+#define IRsafety 50
+
 
 //  Have to be defined as global variables distance/time=[mm/s];	
 //Initial value is actually to low, but it is to make sure that it does not divide by zero on our performance.
@@ -16,6 +18,9 @@ unsigned int speedRightWheelForward = 140;
 unsigned int speedLeftWheelForward = 140;
 unsigned int speedRightWheelBackward = 140;
 unsigned int speedLeftWheelBackward = 140;
+
+unsigned int WhiteRightIRVal;
+unsigned int WhiteLeftIRVal;
 
 Servo servoLeft;
 Servo servoRight;
@@ -229,10 +234,15 @@ void stop(){ //Stop function, makes the robot stop driving (if the servo's are p
 	servoRight.writeMicroseconds(1500);        // Pin 12 stay still
 }
 
-void calibrateIRSensor()
+void calibrateWhiteIR(){
+	WhiteRightIRVal = analogRead(IR_LB) - IRsafety;
+	WhiteLeftIRVal = analogRead(IR_RB) - IRsafety;
+}
+
+colour calibrateIRSensor()
 {
 	// Safety: if zwart != 0
-	//             Break;
+	//			Break;
 
 	// If (read is niet wit) 
 	// read is zwart

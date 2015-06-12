@@ -229,6 +229,17 @@ void stop(){ //Stop function, makes the robot stop driving (if the servo's are p
 	servoRight.writeMicroseconds(1500);        // Pin 12 stay still
 }
 
+void calibrateIRSensor()
+{
+	// Safety: if zwart != 0
+	//             Break;
+
+	// If (read is niet wit) 
+	// read is zwart
+
+	// Voor grijs moet er in de read functies aangepast worden: if read != Wit en != Zwart return Grijs;
+}
+
 int readIRMid(){ //reads Middle IR. Return unit to be determined
 
 }
@@ -256,7 +267,7 @@ colour readIRLB()                         //reads ir left bottom. return unit to
 		return BLACK;
 	else if (temp > 800 && temp < 950)
 		return GREY;
-	else if (temp < 800)
+	else if (temp > 950)
 		return WHITE;
 	else
 		return OTHER;

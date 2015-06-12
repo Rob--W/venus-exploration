@@ -234,7 +234,15 @@ int readIRMid(){ //reads Middle IR. Return unit to be determined
 }
 
 int readIRGrab(){    //Reads IR Grabber. Return unit to be determined;
-
+	int temp = analogRead(IR_LB);
+	if (temp > 950)
+		return BLACK;
+	else if (temp > 800 && temp < 950)
+		return GREY;
+	else if (temp < 800)
+		return WHITE;
+	else
+		return OTHER;
 }
 
 int readLightSense(){                 //Reads Light Sensor. Return unit to be determined

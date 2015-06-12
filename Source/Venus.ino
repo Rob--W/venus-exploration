@@ -4,12 +4,11 @@
 #include "softwaredrivers.h"
 #include "pathlogic.h"
 #include "location.h"
-#include "XBeeCommunication.h"
 
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
 // REDUCING FILESIZES AND SRAM USAGE
-#define DEBUG true				
+#define DEBUG false				
 #define Serial if(DEBUG)Serial
 
 
@@ -362,11 +361,14 @@ void initiateDrive()
 				closeGrabber();
 				grabberOpen = false;
 			}
+
+			delay(1000);
 			// Return to the base
 			reversePath();
 			// And drop it right there
 			// TODO: the IR sensors need to be implemented here
 			// TODO: Backup navigation to the base must also be implemented
+			delay(1000);
 			grabberOpen = true;
 			openGrabber();
 			
@@ -389,6 +391,7 @@ void initiateDrive()
 			// Grab the rock
 			grabberOpen = false;
 			closeGrabber();
+			delay(1000);
 			// Return to the base
 			reversePath();
 			// And drop it right there
@@ -611,7 +614,7 @@ void scanSurroundings()
 		// Calculate the next measuring direction
 		angle = -90 + (i + 1)*angleStep;
 	}
-	
+	delay(200);
 	// look straight ahead
 	readUltraTop(USSERVO_OFFSET); 
 }
@@ -823,112 +826,6 @@ path getAbsoluteCoordinate()
 
 	// return the path to be able to use the coordinates
 	return temp;
-}
-
-/*UltrasoonUP*/
-void USU(){
-	if (readUltraTop(USSERVO_OFFSET) > 280){
-		if (readUltraBot() < 280){							//we might have found a stone
-			drive(readUltraBot(), 0);							// go for it wall-e
-			stop();
-			USU();											//make a re-check, calibration
-		}
-		else{												//nothing found yet
-			drive(25, 0);									//we drive a little further and try it again
-			USU();
-		}
-	}
-	else if (readUltraTop(USSERVO_OFFSET) > 400 && readUltraTop(USSERVO_OFFSET) < 280){
-		if (abs(readUltraBot() - readUltraTop(USSERVO_OFFSET)) < 10){
-			drive(readUltraTop(USSERVO_OFFSET), 0);						//we are going on an adventure
-		}
-		else if ((readUltraBot() - readUltraTop(USSERVO_OFFSET)) > 10){ //There is an object closer to Top than Bot so let's explore it
-			drive(readUltraTop(USSERVO_OFFSET), 0);
-		}
-		else{											//maybe a possible stone 0.o
-			drive(readUltraBot(), 0);
-		}
-	}
-	else{
-		if (abs(readUltraBot() - readUltraTop(USSERVO_OFFSET)) > SAFE_DISTANCE){ //we are standing in front of a rock....
-			stop();
-			drive(10, 90);									//rotate 10 cm to the right
-			USU();											//repeat le process
-		}
-		else{
-			stop();
-			//IRM();										//start stone scan procedure
-		}
-	}
-}
-/*UltrasoonDown*/
-bool USD(){
-	if (readUltraBot() < SAFE_ROCK_DISTANCE){
-		
-	}//re-scan
-	else{
-		USU();					//false alarm, retry
-	}
-}
-
-/*IRUnder*/
-void IRU(){
-	int counter = 0;
-	if (readIRLB() || readIRRB() < 15){
-		stop();												//car stops, because end of the world or a cliff
-		if (readUltraTop > 0){
-			drive(readUltraTop(USSERVO_OFFSET), 0);
-		}
-		else{												//no new point found
-			drive(5, 90);									//drive 5cm to the right
-			drive(0, -90);									//drive back to the left
-			drive(/*shortestpath functie*/0, 0);
-		}
-		if (readIRLB() || readIRRB() > 100 && readIRLB() || readIRRB() < 240){
-			if (counter > 0){								//count grey stripes
-				openGrabber();								//drop the stone
-				counter = 0;
-				//reverse(25);
-			}
-			else{											//i can count grey stripes
-				++counter;
-			}
-		}
-		else{
-			counter = 0;
-		}
-	}
-}
-/*IRMmid*/
-bool IRM(){
-	if (readIRMid() == 1){
-		drive(5, 0);
-		stop();
-		openGrabber();					//get the stone
-		closeGrabber();					//we got the stone
-		reversePath();					//get the stone home wall-e
-	}
-	else{
-		stop();							//stop
-		USD();							//so what did i see
-	}
-}
-
-/*IRGrabber*/
-bool IRG(){
-	if (readIRGrab() == 0){				//We found a wall of the lab, but not the ramp
-		stop();
-		drive(5, 90);					// 5 cm to the right
-		stop();
-		drive(0, -90);					//back to the begin position
-		IRG();							//retry if we found the
-	}
-	else{								//we found the ramp, go for it wall-e
-		drive(5, 0);					//straight to the the goal	
-		IRU();							//scan the ground for the grey stripes
-		stop();							//stop
-		IRG();							//drive further
-	}
 }
 
 bool One(){

@@ -509,8 +509,6 @@ void reversePath()
 	// Some serial checkings...
 	Serial.println("Returning to base: ");
 
-	delay(2000);
-
 	if (currentPathID > 0) {
 		// Turn around and drive the set distance
 		Serial.print(paths[currentPathID - 1].distance);
@@ -520,7 +518,7 @@ void reversePath()
 		drive(paths[currentPathID - 1].distance, 180);
 
 		// Give it time to turn around
-		delay(1000);
+		delay(100);
 	}
 
 	// Revert path, i to 0 to stop at the point before the base
@@ -534,7 +532,7 @@ void reversePath()
 		Serial.println(-paths[i+1].angle);
 		drive(paths[i].distance, -paths[i + 1].angle);
 
-		delay(1000);
+		delay(100);
 	}
 	if (currentPathID > 1) {
 		Serial.print(paths[0].distance);
@@ -551,7 +549,7 @@ void reversePath()
 
 	Serial.println("Done!");
 
-	delay(1000);
+	delay(100);
 
 	bottomCrashDetection = true;
 }

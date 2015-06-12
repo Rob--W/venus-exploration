@@ -104,12 +104,6 @@ path recoverPath(unsigned int startDodge, unsigned int endDodge, path destinatio
 int toCartesian(path pCoordinate, byte index, bool useX);
 path toPolar(byte x, byte y);
 path getAbsoluteCoordinate();
-void IRU();
-bool IRM();
-bool IRG();
-void light();
-void USU();
-bool USD();
 bool One();
 
 void dodge(unsigned int distance, int angle);

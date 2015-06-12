@@ -233,7 +233,7 @@ int readIRMid(){ //reads Middle IR. Return unit to be determined
 
 }
 
-int readIRGrab(){    //Reads IR Grabber. Return unit to be determined;
+colour readIRGrab(){    //Reads IR Grabber. Return unit to be determined;
 	int temp = analogRead(IR_LB);
 	if (temp > 950)
 		return BLACK;

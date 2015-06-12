@@ -44,7 +44,7 @@ void reverse(int distance);	//Makes the robot drive backwards a certain distance
 */
 int readIRMid();	//reads Middle IR. Return unit to be determined
 
-int readIRGrab();		//Reads IR Grabber. Return unit to be determined
+colour readIRGrab();		//Reads IR Grabber. Return unit to be determined
 
 int readLightSense();	//Reads Light Sensor. Return unit to be determined
 

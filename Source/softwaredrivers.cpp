@@ -338,9 +338,14 @@ unsigned int readUltraBot()
 }
 
 void openGrabber(){
+	servoGrabber.attach(grabberservo, 750, 2250);
 	servoGrabber.write(0);
+	delay(500);
+	servoGrabber.detach();
 }
 
 void closeGrabber(){
-	servoGrabber.write(180);
+	servoGrabber.attach(grabberservo, 750, 2250);
+	servoGrabber.write(170);
+	delay(1000);
 }

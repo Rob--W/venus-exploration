@@ -125,7 +125,7 @@ void setup()
 	grabberOpen = true;
 	openGrabber();
 	Serial.println("startsetup");
-	calibratespeedFixedDistance(90);
+	//calibratespeedFixedDistance(90);
 	stop();
 
 	// Set the rotating sensor to its center
@@ -139,7 +139,6 @@ void loop()
 {
 	// Start the strategy
 	initiateDrive();
-
 }
 
 // Routine for the obstacle functions and things that needs to be handled

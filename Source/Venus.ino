@@ -43,7 +43,7 @@
 #define SAMPLES				37				// Number of samples to take for the top-US sensor
 #define PI					3.14159265359	// Obviously
 #define USSERVO_OFFSET		95				// Offset in the data for the top servo
-#define SAFE_DISTANCE		15				// Offset distance due placement of top/bottom US sensor (stopping distance)
+#define SAFE_DISTANCE		17				// Offset distance due placement of top/bottom US sensor (stopping distance)
 #define SAFE_ROCK_DISTANCE	10				// Offset from where the robot must stop to get the rock within grabber range
 #define ROCK_RANGE			10				// Range in which the gripper is able to grab the rock
 #define INTEREST_THRESHOLD  3				// When the number of visits are higher than the set number, the locations are not defined as interesting and will be ignored. Other locations will thus be prioritised.
@@ -149,6 +149,12 @@ bool checkObstacles()
 	if (bottomCrashDetection)
 	{
 		// Simple (placeholder) collission detection
+		if (!IRdown())
+		{
+			crashCause = IR_DOWN;
+			return true;
+		}
+
 		if (!One())
 		{
 			crashCause = US_TOP;
@@ -823,7 +829,17 @@ bool One(){
 	if (readUltraTop(USSERVO_OFFSET) < SAFE_DISTANCE){
 		Serial.println("Stop");
 		stop();
-		delay(1000);
+		return false;
+	}
+
+	return true;
+}
+
+bool IRdown() {
+	if (readIRLB() == BLACK || readIRRB() == BLACK)
+	{
+		Serial.println("Stop");
+		stop();
 		return false;
 	}
 

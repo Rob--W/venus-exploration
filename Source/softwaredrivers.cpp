@@ -235,7 +235,7 @@ int readLightSense(){                 //Reads Light Sensor. Return unit to be de
 
 }
 
-colour readirlb()                         //reads ir left bottom. return unit to be determined; Threshold: 950 is black. grey 890, black 990, white < 800
+colour readIRLB()                         //reads ir left bottom. return unit to be determined; Threshold: 950 is black. grey 890, black 990, white < 800
 {
 	int temp = analogRead(IR_LB);
 	if (temp > 950)
@@ -248,7 +248,7 @@ colour readirlb()                         //reads ir left bottom. return unit to
 		return OTHER;
 }
 
-colour readirrb()                         //reads ir right bottom. return unit to be determined;  Threshold: 950 is black. grey 890, black 990, white < 800
+colour readIRRB()                         //reads ir right bottom. return unit to be determined;  Threshold: 950 is black. grey 890, black 990, white < 800
 {
 	int temp = analogRead(IR_RB);
 	if (temp > 950)

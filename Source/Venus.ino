@@ -778,14 +778,19 @@ int toCartesian(path pCoordinate, byte index, bool useX)
 path toPolar(byte x, byte y)
 {
 	// Set the needed variables
-	path current = paths[currentPathID - 1];
 	DistanceType diffX = 0, diffY = 0;
+
+	for (int i = 0; i < currentPathID; i++)
+	{
+		diffX = paths[i].mapX;
+		diffY = paths[i].mapY;
+	}
 
 	path newPath;
 
 	// Determine the offset seen from the current position
-	diffX = current.mapX + x;
-	diffY = current.mapY + y;
+	diffX += x;
+	diffY += y;
 
 	// Calculate the waypoint
 	newPath.distance = round(sqrt(pow(diffX, 2) + pow(diffY, 2)));

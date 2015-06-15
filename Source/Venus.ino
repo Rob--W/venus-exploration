@@ -125,7 +125,8 @@ void setup()
 	grabberOpen = true;
 	openGrabber();
 	Serial.println("startsetup");
-	calibratespeedFixedDistance(90);
+	calibratespeedFixedDistance(90);//Has to be done at the beginning otherwise the robot cant turn accuratly. something still has to be implemented to still be able to get out of the calibration when one of the encoders doesn't work
+	calibrateWhiteIR(); //after movement calibration white value is calculated
 	stop();
 
 	// Set the rotating sensor to its center

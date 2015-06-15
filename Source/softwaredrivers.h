@@ -16,7 +16,8 @@ enum colour readIRRB();		//Reads IR Right Bottom. Return unit to be determined. 
 void stop();	//Stop function, makes the robot stop driving (if the servo's are properly set)
 
 void ServoUturn(int angle);
-
+void calibrateWhiteIR();
+void calibrateBlackIR();
 //left: value between 0 and 180 that drives the left servo
 //right:value between 0 and 180 that drives the right servo
 //0 is the turn to one direction. 90 is stop. 180 is turn to the other direction.

@@ -21,6 +21,10 @@ unsigned int speedLeftWheelBackward = 140;
 
 unsigned int WhiteRightIRVal;
 unsigned int WhiteLeftIRVal;
+unsigned int BlackRightIRVal = 0;
+unsigned int BlackLeftIRVal = 0;
+
+bool switchIRBlackCalib = true; //used to check a function just a single time
 
 Servo servoLeft;
 Servo servoRight;
@@ -195,6 +199,24 @@ int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to r
 		if (checkObstacles())
 			break;
 
+		//IRscanning (holes, lines)
+		if (switchIRBlackCalib == true){
+			if (analogRead(IR_LB) < WhiteLeftIRVal || analogRead(IR_RB) < WhiteRightIRVal){
+				stop();
+				calibrateBlackIR();
+			}
+		}
+		if (switchIRBlackCalib == false){
+			if (analogRead(IR_LB) < BlackLeftIRVal || analogRead(IR_RB) < BlackRightIRVal){
+				stop();
+				break; //otherwise time will be wasted, and this way it is not wasted
+			}
+		}
+		//IRscanning gray
+		//if ((analogread(ir_lb) < whiteleftirval && analogread(ir_lb) > blackleftirval) || (analogread(ir_rb) < whiterightirval && analogread(ir_rb) > blackrightirval)){
+		//	//some way has to be thought up to return gray
+		//}
+
 		//Spakentellen/Count spokes to find the distance traveled (approximately
 		if (digitalRead(rightencoder) != prevpulse){
 			prevpulse = !prevpulse;
@@ -234,13 +256,24 @@ void stop(){ //Stop function, makes the robot stop driving (if the servo's are p
 	servoRight.writeMicroseconds(1500);        // Pin 12 stay still
 }
 
-void calibrateWhiteIR(){
-	WhiteRightIRVal = analogRead(IR_LB) - IRsafety;
-	WhiteLeftIRVal = analogRead(IR_RB) - IRsafety;
+void calibrateWhiteIR(){	//Calibrate white first
+	WhiteRightIRVal = analogRead(IR_RB) - IRsafety;
+	WhiteLeftIRVal = analogRead(IR_LB) - IRsafety;
 }
 
-colour calibrateIRSensor()
+void calibrateBlackIR()		//Calibrate if a change is measured in the ir read that is not white any more
 {
+	if (BlackLeftIRVal == 0 && analogRead(IR_LB) < WhiteRightIRVal){
+		BlackLeftIRVal = analogRead(IR_LB) + IRsafety;
+	}
+
+	if (BlackRightIRVal == 0 && analogRead(IR_RB) < WhiteRightIRVal){
+		BlackRightIRVal = analogRead(IR_RB) + IRsafety;
+	}
+
+	if (BlackRightIRVal != 0 && BlackLeftIRVal != 0){
+		switchIRBlackCalib = false;
+	}
 	// Safety: if zwart != 0
 	//			Break;
 

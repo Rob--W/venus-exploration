@@ -166,18 +166,18 @@ bool checkObstacles()
 			return true;
 		}
 
-		//if (!One())
-		//{
-		//	crashCause = US_TOP;
-		//	return true;
-		//}
+		if (!One())
+		{
+			crashCause = US_TOP;
+			return true;
+		}
 
-		//if (readUltraBot() < SAFE_ROCK_DISTANCE && BOTTOM_US_SENSOR)
-		//{
-		//	Serial.println("Block found");
-		//	crashCause = ROCK;
-		//	return true;
-		//}
+		if (readUltraBot() < SAFE_ROCK_DISTANCE && BOTTOM_US_SENSOR)
+		{
+			Serial.println("Block found");
+			crashCause = ROCK;
+			return true;
+		}
 	}
 
 

@@ -147,7 +147,7 @@ int calculateDistanceDelayBackward(int distance){ //distance in mm
 }
 
 int calculateDistanceDelayForward(int distance){ //distance in mm
-	return round((2 * distance*mmconv) / (speedLeftWheelForward + speedRightWheelForward));
+	return round((distance*mmconv) / (speedLeftWheelForward + speedRightWheelForward));
 }
 
 void turnLeft(int percentagePower, int angle){
@@ -239,7 +239,7 @@ int drive(unsigned int distance, int angle)
 		//PRight(abs(angle) * round(555 / 90));
 	} 
 
-	return philipsForward(motorpower, distance*100);
+	return philipsForward(motorpower, distance*1000);
 		//FForward(distance * round(2000.0 / 30));
 }
 

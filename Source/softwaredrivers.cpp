@@ -2,13 +2,6 @@
 #include <Servo.h>
 #include "softwaredrivers.h"
 
-#define US_BOTPIN_O 4
-#define US_BOTPIN_I 5
-#define mmconv				1000.0 //meter times 1000 = mm
-#define IR_RB A0
-#define IR_LB A1
-#define motorpower	90		//define percentagepower in drive/philipsforward function
-#define IRsafety 50
 
 
 //  Have to be defined as global variables distance/time=[mm/s];	
@@ -19,12 +12,13 @@ unsigned int speedLeftWheelForward = 140;
 unsigned int speedRightWheelBackward = 140;
 unsigned int speedLeftWheelBackward = 140;
 
+
 unsigned int WhiteRightIRVal;
 unsigned int WhiteLeftIRVal;
 unsigned int BlackRightIRVal = 0;
 unsigned int BlackLeftIRVal = 0;
-
 bool switchIRBlackCalib = true; //used to check a function just a single time
+
 
 Servo servoLeft;
 Servo servoRight;
@@ -60,7 +54,7 @@ void ServoUturn(int angle){
 }
 
 void calibratespeedFixedDistance(int percentagePower){
-	const int travelDistance = 396;	//400 millimeter
+	const int travelDistance = 405;	//400 millimeter
 	int rightWheelTime;
 	int leftWheelTime;
 
@@ -142,12 +136,12 @@ int calculateAngleDelayRight(int angle){	//clockwise turning (met de klok mee in
 	return round((((105 * PI*angle) / 180) / (speedLeftWheelForward + speedRightWheelBackward))*mmconv);	//average speed instead of time (seems to be more accurate)
 }
 
-int calculateDistanceDelayBackward(int distance){ //distance in mm
-	return round((2*distance*mmconv)/(speedRightWheelBackward+speedLeftWheelBackward));
+unsigned long calculateDistanceDelayBackward(int distance){ //distance in mm
+	return round((2 * distance*mmconv*10.0) / (speedRightWheelBackward + speedLeftWheelBackward));
 }
 
-int calculateDistanceDelayForward(int distance){ //distance in mm
-	return round((distance*mmconv) / (speedLeftWheelForward + speedRightWheelForward));
+unsigned long calculateDistanceDelayForward(int distance){ //distance in mm
+	return round((2*distance*mmconv*10.0) / (speedLeftWheelForward + speedRightWheelForward));
 }
 
 void turnLeft(int percentagePower, int angle){
@@ -168,50 +162,14 @@ int Backward(int percentagePower, int distance){ //PERCENTAGEpower is to regulat
 	//Drive forward
 	servoRight.write(round(90 + (90 * (percentagePower / 100.0))));
 	servoLeft.write(round(90 - (90 * (percentagePower / 100.0))));
-
+	
 	long travelTime = millis() + calculateDistanceDelayBackward(distance);
-	//this part is used in multiple functions. can be shortend
 	while (travelTime>millis()){
+		//Serial.println("In the whiledrive");
 		//fun code
-		if (checkObstacles())
-			break;
+		/*if (checkObstacles())
+			break;*/
 
-		//Spakentellen/Count spokes to find the distance traveled (approximately
-		if (digitalRead(rightencoder) != prevpulse){
-			prevpulse = !prevpulse;
-			countpulse++;
-		}
-	}
-	stop();
-	return round(countpulse*13.7);
-}
-
-int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to regulate tire speed, keep at 90. returns distance in centimeter.
-	int countpulse = 0;
-	bool prevpulse = digitalRead(rightencoder);
-	//Drive forward
-	servoRight.write(round(90 - (90 * (percentagePower / 100.0))));
-	servoLeft.write(round(90 + (90 * (percentagePower / 100.0))));
-
-	long travelTime = millis() + calculateDistanceDelayForward(distance);
-	while (travelTime>millis()){
-		//fun code
-		if (checkObstacles())
-			break;
-
-		//IRscanning (holes, lines)
-		if (switchIRBlackCalib == true){
-			if (analogRead(IR_LB) < WhiteLeftIRVal || analogRead(IR_RB) < WhiteRightIRVal){
-				stop();
-				calibrateBlackIR();
-			}
-		}
-		if (switchIRBlackCalib == false){
-			if (analogRead(IR_LB) < BlackLeftIRVal || analogRead(IR_RB) < BlackRightIRVal){
-				stop();
-				break; //otherwise time will be wasted, and this way it is not wasted
-			}
-		}
 		//IRscanning gray
 		//if ((analogread(ir_lb) < whiteleftirval && analogread(ir_lb) > blackleftirval) || (analogread(ir_rb) < whiterightirval && analogread(ir_rb) > blackrightirval)){
 		//	//some way has to be thought up to return gray
@@ -227,21 +185,59 @@ int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to r
 	return (countpulse*13.7);
 }
 
-int drive(unsigned int distance, int angle)
+
+int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to regulate tire speed, keep at 90. returns distance in centimeter.
+	int countpulse = 0;
+	bool prevpulse = digitalRead(rightencoder);
+	//Drive forward
+	servoRight.write(round(90 - (90 * (percentagePower / 100.0))));
+	servoLeft.write(round(90 + (90 * (percentagePower / 100.0))));
+
+	long travelTime = millis() + calculateDistanceDelayForward(distance);
+	while (travelTime>millis()){
+		//Serial.println("In the whiledrive");
+		//fun code
+		if (checkObstacles())
+			break;
+
+		//IRscanning gray
+		//if ((analogread(ir_lb) < whiteleftirval && analogread(ir_lb) > blackleftirval) || (analogread(ir_rb) < whiterightirval && analogread(ir_rb) > blackrightirval)){
+		//	//some way has to be thought up to return gray
+		//}
+
+		//Spakentellen/Count spokes to find the distance traveled (approximately
+		if (digitalRead(rightencoder) != prevpulse){
+			prevpulse = !prevpulse;
+			countpulse++;
+		}
+	}
+	stop();
+	return (countpulse*13.7);
+}
+
+int drive(int distance, int angle)
 {
+	int temp = 0;
+	Serial.println("top of Drive()");
+	if (distance < 0){
+		temp = Backward(motorpower, -distance);
+	}
 	if (angle >= 0) {
 		// left angle
 		turnLeft(motorpower, angle);
 		//PLeft(abs(angle) * round(555 / 90));
-	} else if (angle < 0) {
+	} 
+	else if (angle < 0) {
 		// right angle
 		turnRight(motorpower, -angle);
 		//PRight(abs(angle) * round(555 / 90));
 	} 
-
-	return philipsForward(motorpower, distance*1000);
-		//FForward(distance * round(2000.0 / 30));
+	if (distance >= 0){
+		return philipsForward(motorpower, distance);
+	}	//FForward(distance * round(2000.0 / 30));
+	return(temp);
 }
+
 
 void Turn180() {
 	servoLeft.writeMicroseconds(1700);
@@ -259,6 +255,14 @@ void stop(){ //Stop function, makes the robot stop driving (if the servo's are p
 void calibrateWhiteIR(){	//Calibrate white first
 	WhiteRightIRVal = analogRead(IR_RB) - IRsafety;
 	WhiteLeftIRVal = analogRead(IR_LB) - IRsafety;
+	BlackLeftIRVal = 0;
+	BlackRightIRVal = 0;
+	Serial.println("For white:");
+	Serial.print("leftvalue= ");
+	Serial.println(analogRead(IR_LB));
+	Serial.print("rightvalue= ");
+	Serial.println(analogRead(IR_RB));
+	switchIRBlackCalib = true;
 }
 
 void calibrateBlackIR()		//Calibrate if a change is measured in the ir read that is not white any more
@@ -416,4 +420,27 @@ void closeGrabber(){
 	servoGrabber.attach(grabberservo, 750, 2250);
 	servoGrabber.write(180);
 	delay(1000);
+}
+
+bool CliffSensing(){ //true == no cliff; false == cliff
+	Serial.print("leftvalue= ");
+	Serial.println(analogRead(IR_LB));
+	Serial.print("rightvalue= ");
+	Serial.println(analogRead(IR_RB));
+	if (switchIRBlackCalib == true){
+		if (analogRead(IR_LB) < WhiteLeftIRVal || analogRead(IR_RB) < WhiteRightIRVal){
+			stop();
+			calibrateBlackIR();
+			return(false);//False means it sees a cliff
+		}
+	}
+	else if (switchIRBlackCalib == false){
+		if (analogRead(IR_LB) < BlackLeftIRVal || analogRead(IR_RB) < BlackRightIRVal){
+			return(false);
+		}
+	}
+	else {
+		return(true);
+	}
+
 }

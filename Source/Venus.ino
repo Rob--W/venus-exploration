@@ -8,7 +8,7 @@
 // Toggle to enable/disable serial output and debugging
 // NONE	OF THE SERIAL CODES WILL THUS BE COMPILED
 // REDUCING FILESIZES AND SRAM USAGE
-#define DEBUG false				
+#define DEBUG true			
 #define Serial if(DEBUG)Serial
 
 
@@ -139,35 +139,45 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	initiateDrive();
+	//initiateDrive();
+	Serial.println("Top of the loop.");
+	/*if (crashCause == IR_DOWN){
+		drive(-1, -180);
+		crashCause = NONE;
+	}
+	else  {drive(0, 180); }*/
+	delay(2000);
 }
 
 // Routine for the obstacle functions and things that needs to be handled
 // during the driving procedure
 bool checkObstacles()
 {
+	
 	// Disable crash detection when reversing path
 	if (bottomCrashDetection)
 	{
+		
 		// Simple (placeholder) collission detection
 		if (!IRdown())
 		{
+			Serial.println("in check obstacles");
 			crashCause = IR_DOWN;
 			return true;
 		}
 
-		if (!One())
-		{
-			crashCause = US_TOP;
-			return true;
-		}
+		//if (!One())
+		//{
+		//	crashCause = US_TOP;
+		//	return true;
+		//}
 
-		if (readUltraBot() < SAFE_ROCK_DISTANCE && BOTTOM_US_SENSOR)
-		{
-			Serial.println("Block found");
-			crashCause = ROCK;
-			return true;
-		}
+		//if (readUltraBot() < SAFE_ROCK_DISTANCE && BOTTOM_US_SENSOR)
+		//{
+		//	Serial.println("Block found");
+		//	crashCause = ROCK;
+		//	return true;
+		//}
 	}
 
 
@@ -708,14 +718,8 @@ bool One(){
 }
 
 bool IRdown() {
-	if (readIRLB() == BLACK || readIRRB() == BLACK)
-	{
-		Serial.println("Stop");
-		stop();
-		return false;
-	}
-
-	return true;
+	Serial.println("in IRdown()");
+	return (CliffSensing());
 }
 
 // Function to compress actions for making a dodge

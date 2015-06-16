@@ -1,5 +1,14 @@
 #pragma once
 
+#define US_BOTPIN_O 4
+#define US_BOTPIN_I 5
+#define mmconv				1000.0 //meter times 1000 = mm
+#define IR_RB A0
+#define IR_LB A1
+#define motorpower	90		//define percentagepower in drive/philipsforward function
+#define IRsafety 100
+
+
 bool checkObstacles();
 enum colour { BLACK, WHITE, GREY, OTHER };
 
@@ -27,7 +36,7 @@ void calibrateBlackIR();
 //distance
 // distance is the maximum distance (in cm).
 // Returns the traveled distance (in cm).
-int drive(unsigned int distance, int angle);
+int drive(int distance, int angle);
 //Function to measure the speed of the wheel at a certain amount of the wheels power
 void calibratespeedFixedDistance(int percentagePower);
 // Move forwards at the full speed.
@@ -56,3 +65,4 @@ unsigned int readUltraBot(); //Reads bottom Ultrasonic sensor. Return unit is a 
 void openGrabber(); //Opens the grabber
 
 void closeGrabber(); //closes the grabbr
+bool CliffSensing(); //looks for cliffs/black lines; true is no cliff; false is cliff

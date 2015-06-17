@@ -147,13 +147,15 @@ unsigned long calculateDistanceDelayForward(int distance){ //distance in mm
 void turnLeft(int percentagePower, int angle){
 	servoLeft.write(round(90 - ((percentagePower / 100.0) * 90)));
 	servoRight.write(round(90 - ((percentagePower / 100.0) * 90)));
-	delay(calculateAngleDelayLeft(angle));
+	delay(calculateAngleDelayLeft(angle)); 
+	stop();
 }
 
 void turnRight(int percentagePower, int angle){
 	servoLeft.write(round(90 + ((percentagePower / 100.0) * 90)));
 	servoRight.write(round(90 + ((percentagePower / 100.0) * 90)));
 	delay(calculateAngleDelayRight(angle));
+	stop();
 }
 
 int Backward(int percentagePower, int distance){ //PERCENTAGEpower is to regulate tire speed, keep at 90. returns distance in centimeter.
@@ -222,6 +224,7 @@ int drive(int distance, int angle)
 	if (distance < 0){
 		temp = Backward(motorpower, -distance);
 	}
+
 	if (angle >= 0) {
 		// left angle
 		turnLeft(motorpower, angle);
@@ -235,7 +238,7 @@ int drive(int distance, int angle)
 	if (distance >= 0){
 		return philipsForward(motorpower, distance);
 	}	//FForward(distance * round(2000.0 / 30));
-	return(temp);
+	return(-temp);
 }
 
 

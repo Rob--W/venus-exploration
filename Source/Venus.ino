@@ -140,13 +140,16 @@ void loop()
 {
 	// Start the strategy
 	//initiateDrive();
-	Serial.println("Top of the loop.");
-	/*if (crashCause == IR_DOWN){
-		drive(-1, -180);
-		crashCause = NONE;
-	}
-	else  {drive(0, 180); }*/
+	//Serial.println("Top of the loop.");
 	delay(2000);
+	drive(-10, -180);
+	delay(4000);
+	drive(10, 180);
+	delay(5000);
+	drive(-10, 180);
+	delay(4000);
+	drive(10, -180);
+	delay(5000);
 }
 
 // Routine for the obstacle functions and things that needs to be handled

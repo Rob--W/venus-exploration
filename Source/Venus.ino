@@ -139,17 +139,7 @@ void setup()
 void loop()
 {
 	// Start the strategy
-	//initiateDrive();
-	//Serial.println("Top of the loop.");
-	delay(2000);
-	drive(-10, -180);
-	delay(4000);
-	drive(10, 180);
-	delay(5000);
-	drive(-10, 180);
-	delay(4000);
-	drive(10, -180);
-	delay(5000);
+	initiateDrive();
 }
 
 // Routine for the obstacle functions and things that needs to be handled
@@ -164,7 +154,6 @@ bool checkObstacles()
 		// Simple (placeholder) collission detection
 		if (!IRdown())
 		{
-			Serial.println("in check obstacles");
 			crashCause = IR_DOWN;
 			return true;
 		}
@@ -238,7 +227,6 @@ void initiateDrive()
 
 	}
 	else {
-		Serial.println("No difference found");
 		// Set the new data into the path
 		newPath.angle = 0;
 		newPath.distance = distance;
@@ -322,8 +310,6 @@ void initiateDrive()
 
 	// We'd like to know if the full path has been driven, if not, the last waypoint needs to be changed
 	DistanceType drivenDistance = drive(newPath.distance, newPath.angle);
-	Serial.print("Distance driven: ");
-	Serial.println(drivenDistance);
 	delay(1000);
 
 	// Do some waypoint management
@@ -372,6 +358,8 @@ void initiateDrive()
 			foundRock = true;
 			if (grabberOpen){
 				closeGrabber();
+				calibratespeedFixedDistance(100);
+				calibrateWhiteIR();
 				grabberOpen = false;
 			}
 
@@ -385,6 +373,17 @@ void initiateDrive()
 			grabberOpen = true;
 			openGrabber();
 			
+			for (int i = 0; i < currentPathID; i++)
+			{
+				paths[i].distance = NULL;
+				paths[i].angle = NULL;
+				paths[i].mapX = NULL;
+				paths[i].mapY = NULL;
+			}
+			currentPathID = 0;
+
+			drive(-20, 180);
+
 			foundRock = false;
 			crashCause = NONE;
 			break;
@@ -404,6 +403,8 @@ void initiateDrive()
 			// Grab the rock
 			grabberOpen = false;
 			closeGrabber();
+			calibratespeedFixedDistance(100);
+			calibrateWhiteIR();
 			delay(1000);
 			// Return to the base
 			reversePath();
@@ -413,6 +414,17 @@ void initiateDrive()
 			delay(1000);
 			grabberOpen = true;
 			openGrabber();
+
+			for (int i = 0; i < currentPathID; i++)
+			{
+				paths[i].distance = NULL;
+				paths[i].angle = NULL;
+				paths[i].mapX = NULL;
+				paths[i].mapY = NULL;
+			}
+			currentPathID = 0;
+
+			drive(-20, 180);
 
 			// Prevent reboot due power constraints
 			delay(10000);
@@ -599,8 +611,6 @@ void scanSurroundings()
 		if (angle == USSERVO_OFFSET && BOTTOM_US_SENSOR)
 		{
 			usDown = readUltraBot() - SAFE_ROCK_DISTANCE;
-			Serial.print("Bottom: ");
-			Serial.println(usDown);
 		}
 
 		int distance = readUltraTop(angle + 90);
@@ -613,11 +623,6 @@ void scanSurroundings()
 			// Substract the collision distance to prevent riding into objects
 			distance -= SAFE_DISTANCE;
 		}
-
-		Serial.print("a: ");
-		Serial.print(angle);
-		Serial.print(" - d: ");
-		Serial.println(distance);
 
 		usData[i].distance = distance;
 
@@ -721,7 +726,6 @@ bool One(){
 }
 
 bool IRdown() {
-	Serial.println("in IRdown()");
 	return (CliffSensing());
 }
 

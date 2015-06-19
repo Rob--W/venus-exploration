@@ -220,7 +220,6 @@ int philipsForward(int percentagePower, int distance){ //PERCENTAGEpower is to r
 int drive(int distance, int angle)
 {
 	int temp = 0;
-	Serial.println("top of Drive()");
 	if (distance < 0){
 		temp = Backward(motorpower, -distance);
 	}
@@ -260,11 +259,6 @@ void calibrateWhiteIR(){	//Calibrate white first
 	WhiteLeftIRVal = analogRead(IR_LB) - IRsafety;
 	BlackLeftIRVal = 0;
 	BlackRightIRVal = 0;
-	Serial.println("For white:");
-	Serial.print("leftvalue= ");
-	Serial.println(analogRead(IR_LB));
-	Serial.print("rightvalue= ");
-	Serial.println(analogRead(IR_RB));
 	switchIRBlackCalib = true;
 }
 
@@ -426,10 +420,6 @@ void closeGrabber(){
 }
 
 bool CliffSensing(){ //true == no cliff; false == cliff
-	Serial.print("leftvalue= ");
-	Serial.println(analogRead(IR_LB));
-	Serial.print("rightvalue= ");
-	Serial.println(analogRead(IR_RB));
 	if (switchIRBlackCalib == true){
 		if (analogRead(IR_LB) < WhiteLeftIRVal || analogRead(IR_RB) < WhiteRightIRVal){
 			stop();
